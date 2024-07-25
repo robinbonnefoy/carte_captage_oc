@@ -78,20 +78,19 @@ html, body {
     background-color: white;
     overflow-x: hidden;
     transition: 0.5s;
-    padding-top: 60px;
+    padding: 0;
+    padding-top: 5px;
     box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    background-color: #007c8e;
 }
 
 /* Style pour le contenu du panneau */
 #panel-content {
-    padding: 20px;
+    padding: 0px;
+    padding-top: 5px;
 }
 
-/* Bouton pour ouvrir/fermer le panneau */
 .openbtn {
-    position: fixed;
-    top: 20px;
-    right: 0px;
     background-color: white;
     border-color: #007c8e;
     /* border : none; */
@@ -101,9 +100,71 @@ html, body {
     z-index: 1000;
     display: flex;
     align-items: center;
+    border-right: none; /* Supprimer la bordure à droite */
+}
+
+/* Boutons pour ouvrir/fermer le panneau */
+#bt_demarches {
+    top: 20px;
+    right: 0px;
+    position: fixed;
+}
+
+#bt_captages{
+    top: 90px;
+    right: 0px;
+    position: fixed;
 }
 
 .logo_lateral{
     height : 50px;
     width : 50px;
+}
+
+.bt_onglet {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    background-color: white;
+    border-radius: 25px 25px 0 0;
+    border: 2px solid #007c8e;
+    cursor: pointer;
+    width: 148px;
+}
+
+.bt_onglet.actif {
+    border-bottom : none;
+}
+
+.titre_onglet{
+    color: #007c8e;
+    font-weight: bold;
+}
+
+#bt_fermer {
+    background-color: transparent;
+    color: white;
+    margin-left : 5px;
+    border: 2px solid white;
+    border-radius : 2px;
+}
+
+.onglet {
+    display: flex;
+    gap: 4px; /* Espace entre les boutons */
+}
+
+/* Logo des entêtes des onglets */
+.image_onglet{
+    height : 40px;
+    width : 40px;   
+    margin-right: 10px; /* Espace entre l'image et le texte */
+}
+
+fieldset {
+    border: 2px solid #007c8e;
+    border-top : none;
+    margin: 0px;
+    background-color : white;
+    height : 100%;
 }

@@ -14,30 +14,77 @@ $(document).ready(function () {
 
 
     /// Panneau latéral
+
     // Fonction pour ouvrir/fermer le panneau
-    function togglePanel() {
+    function togglePanel(action) {
+        const panelWidth = "300px";
         const panel = document.getElementById("panel");
         const mapContainer = document.getElementById("map");
-        const isOpen = panel.style.width === "250px";
-    
-        if (isOpen) {
+        const openButtons = document.querySelectorAll('.openbtn');
+        // const isOpen = panel.style.width === panelWidth;
+        if (action === 'close') {
             // Fermer le panneau
             panel.style.width = "0";
             mapContainer.style.width = "100%";
-            document.querySelector('.openbtn').innerHTML = "☰ Ouvrir Panneau";
+            document.querySelector('.openbtn').innerHTML = '<img src="assets/images/demarche.png" alt="Infos Démarches" class="logo_lateral">';
+            // Afficher les deux boutons
+            openButtons.forEach(button => {
+                button.style.display = 'block';
+            });
         } else {
             // Ouvrir le panneau
-            panel.style.width = "250px";
-            mapContainer.style.width = "calc(100% - 250px)";
-            document.querySelector('.openbtn').innerHTML = "✖ Fermer Panneau";
+            panel.style.width = panelWidth;
+            mapContainer.style.width = "calc(100% - " + panelWidth + ")";
+            // Occulter les deux boutons
+            openButtons.forEach(button => {
+                button.style.display = 'none';
+            });
         }
     }
 
-    var bt_demarche = document.getElementById('bt_demarches');
+    // Navigation entre les onglets
+    function afficherOnglet(ongletId) {
+        // Masquer tous les fieldsets
+        var fieldsets = document.querySelectorAll('fieldset');
+        fieldsets.forEach(function(fieldset) {
+            fieldset.style.display = 'none';
+        });
+        // Afficher le fieldset correspondant à l'onglet sélectionné
+        document.getElementById(ongletId).style.display = 'block';
+        // Afficher fildeset seconde intention
+        if (ongletId === 'onglet_laboratoire' || ongletId === 'onglet_resultat') {
+        };
+        var boutons = document.querySelectorAll('#onglets button');
+        boutons.forEach(function(bouton) {
+            bouton.classList.remove('actif');
+        });
+        var boutonActif = document.querySelector('#onglets button[data-onglet="' + ongletId + '"]');
+        boutonActif.classList.add('actif');
+    }
 
-    bt_demarche.addEventListener("click", () => {
-        togglePanel();
+    // Paramétrage des deux boutons latéraux
+    document.getElementById('bt_demarches').addEventListener("click", () => {
+        togglePanel('open');
+        afficherOnglet('onglet_demarches');
     });
+    document.getElementById('bt_captages').addEventListener("click", () => {
+        togglePanel('open');
+        afficherOnglet('onglet_captages');
+    });
+
+    // Paramétrage du bouton pour fermer le panneau
+    document.getElementById('bt_fermer').addEventListener("click", () => {
+        togglePanel('close');
+    });
+
+    // Paramétrage des bouton Onglets
+    document.getElementById('bt_onglet_demarches').addEventListener("click", () => {
+        afficherOnglet('onglet_demarches');
+    });
+    document.getElementById('bt_onglet_captages').addEventListener("click", () => {
+        afficherOnglet('onglet_captages');
+    });
+
 
 
     // ------------------------------------------------------------------------------------------------------------
@@ -72,7 +119,7 @@ $(document).ready(function () {
     /////  Couche bassin métropole (EPSG:4326)
 
     const bassin_metropole = L.geoJSON(null,{
-        color:'rgb(113,151,141)',
+        color:'rgb(108,188,165)',
         weight:2,
         fill:false
     });
@@ -84,8 +131,8 @@ $(document).ready(function () {
     ///// Couche département (EPSG:4326)
 
     const departement = L.geoJSON(null,{
-        color:'rgb(108,188,165)',
-        weight:2,
+        color:'rgb(113,151,141)',
+        weight:1,
         fill:false
     });
     $.getJSON('data/dep_oc.geojson', function(data){
@@ -97,7 +144,7 @@ $(document).ready(function () {
     const region = L.mask('data/region_oc.geojson', {
         fitBounds: false,
         restrictBounds: false,
-        fillOpacity: 0.5,
+        fillOpacity: 0.7,
         stroke : 0
     }).addTo(map);
 
@@ -120,6 +167,8 @@ $(document).ready(function () {
     // Fin de l'action du survol avec la souris
 	function resetHighlight(e) {
         demarches.resetStyle(e.target);
+
+        //aac.bringToFront();
     };
 
     // Appliqué à chaque démarche
@@ -139,28 +188,28 @@ $(document).ready(function () {
     /// Style
     function style_demarches (feature) {
         var style;
-        // Démarches en cours ou en élaboration
-        if (feature.properties.type !== 'AAC' && feature.properties.statut !== 'Terminée' ) {
+        // Démarches en cours
+        if (feature.properties.type_web === 'autre' && feature.properties.statut_web !== 'terminee' ) {
             style = {
                 color:'rgb(000,124,142)',
-                weight:1,
+                weight:2,
                 fillColor: 'rgb(000,124,142)',
                 fillOpacity: 0.5,
             }
-        // Démarches terminées
-        } else if (feature.properties.type !== 'AAC' && feature.properties.statut === 'Terminée') {
+        // AAC ou PAT en cours
+        } else if ((feature.properties.type_web === 'AAC') && feature.properties.statut_web !== 'terminee') {
             style = {
-                color:'rgb(000,124,89)',
-                weight:1,
-                fillColor: 'rgb(000,124,89)',
+                color:'rgb(87,107,53)',
+                weight:2,
+                fillColor: 'rgb(87,107,53)',
                 fillOpacity: 0.5,
             }
         // AAC
         } else {
             style = {
-                color:'rgb(87,107,53)',
-                weight:1,
-                fillColor: 'rgb(87,107,53)',
+                color:'rgb(164,165,164)',
+                weight:2,
+                fillColor: 'rgb(164,165,164)',
                 fillOpacity: 0.5,
             }
         }
@@ -170,11 +219,29 @@ $(document).ready(function () {
     const demarches = L.geoJSON(null,{
         style: style_demarches,
         onEachFeature: onEachFeature_demarches,
+        attribution: 'FREDON Occitanie'
     });
     $.getJSON('data/demarches.geojson', function(data){
         console.log(data);
         demarches.addData(data).addTo(map);
     });
+
+    // --------------------------------------------------------------------------------------------------------------
+    ///// AAC (EPSG:4326)
+    // Toutes les AAC qui n'ont pas de démarches associées directement
+
+    const aac = L.geoJSON(null,{
+        color:'rgb(87,107,53)',
+        weight:2,
+        fillColor: 'rgb(87,107,53)',
+        fillOpacity: 0.5,
+    });
+    $.getJSON('data/aac_oc.geojson', function(data){
+        aac.addData(data).addTo(map);
+    });
+
+
+    aac.bringToFront();
 
     // --------------------------------------------------------------------------------------------------------------
     ///// Captages (EPSG:4326)

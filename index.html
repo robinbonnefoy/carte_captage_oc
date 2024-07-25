@@ -33,11 +33,33 @@
         <img id="logo" src="assets/images/logo_captage.png" alt="Logo Captages d'EAUccitanie">
     </div>
     <div id="map"></div>
-    <button id="bt_demarches" class="openbtn"><img src="assets/images/demarche.png" alt="Infos Démarches" class="logo_lateral"></button>
+    <button id="bt_demarches" class="openbtn"><img src="assets/images/demarche.png" alt="Infos Démarche(s)" class="logo_lateral"></button>
+    <button id="bt_captages" class="openbtn"><img src="assets/images/goutte_menu.png" alt="Infos Captage(s)" class="logo_lateral"></button>
     <div id="panel">
+
+        <button id="bt_fermer"> > </button>
         <div id="panel-content">
-            <h2>Panneau d'Information</h2>
-            <p>Contenu du panneau...</p>
+
+            <!-- En-tête Onglets -->
+            <div id="onglets" class="onglet"> 
+                <button type="button" id="bt_onglet_demarches" data-onglet="onglet_demarches" class="bt_onglet">
+                    <img src="assets/images/demarche.png" class="image_onglet">
+                    <span class="titre_onglet"> Démarche(s) territoriale(s) </span>
+                </button>
+                <button type="button" id="bt_onglet_captages" data-onglet="onglet_captages" class="bt_onglet">
+                    <img src="assets/images/goutte_menu.png" class="image_onglet">
+                    <span class="titre_onglet"> Captage(s) associé(s) </span>
+                </button>
+            </div>
+
+            <!-- Contenu Onglets -->
+            <fieldset id="onglet_demarches">
+                Si vous avez connaissance d'une démarche en cours dans ce secteur, <a href="https://www.fredonoccitanie.com/captages/nous-contacter/" > contactez-nous</a>.
+            </fieldset>
+
+            <fieldset id="onglet_captages">
+                Infos sur le(les) captages.
+            </fieldset>
         </div>
     </div>
 
