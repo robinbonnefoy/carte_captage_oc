@@ -1,0 +1,109 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+.leaflet-container {
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* LOADER */
+
+#loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#logo {
+    width: auto; /* Ajustez la taille selon votre besoin */
+    height: auto;
+    animation: wave 1.5s infinite;
+}
+
+@keyframes wave {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+    33% {
+        transform: rotate(10deg);
+    }
+    66% {
+        transform: rotate(-10deg);
+    }
+}
+
+
+/* CARTE */
+
+#map {
+    height: 100vh;
+    width: calc(100% - 0px); /* Initialement, panneau de largeur 0 */
+    transition: width 0.5s;
+    float: left;
+}
+
+
+/* Message occutation couche captage */
+.layer-hidden-control {
+    background-color: white;
+    border: 1px solid rgb(105, 105, 105);
+    color:rgb(105, 105, 105);
+    border-radius: 5px;
+    padding: 7px;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+
+/* PANNEAU LATERAL */
+
+/* Style pour le panneau rabattable */
+#panel {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    top: 0;
+    right: 0;
+    background-color: white;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+}
+
+/* Style pour le contenu du panneau */
+#panel-content {
+    padding: 20px;
+}
+
+/* Bouton pour ouvrir/fermer le panneau */
+.openbtn {
+    position: fixed;
+    top: 20px;
+    right: 0px;
+    background-color: white;
+    border-color: #007c8e;
+    /* border : none; */
+    padding: 5px;
+    border-radius: 12px 0 0 12px;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+}
+
+.logo_lateral{
+    height : 50px;
+    width : 50px;
+}
