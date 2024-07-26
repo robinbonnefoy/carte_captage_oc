@@ -1,5 +1,9 @@
 $(document).ready(function () {
+    // ------------------------------------------------------------------------------------------------------------
+    ///// Constantes
 
+    const panelWidth = "300px";
+    
     // ------------------------------------------------------------------------------------------------------------
     ///// Méthodes
 
@@ -12,12 +16,27 @@ $(document).ready(function () {
         }, 3000);               
 	};
 
+    /// Carte
+
+    // Zoom sur l'entité polygonale sélectionnée
+	function zoomToFeature(e) {
+        map.fitBounds(e.target.getBounds(),{maxZoom : 12});
+    };
+
 
     /// Panneau latéral
 
+    // Vérifie si le pannneau latéral est ouvert, et l'ouvre si nécessaire
+    function openPanel (){
+        const panel = document.getElementById("panel");
+        const isOpen = panel.style.width === panelWidth;
+        if (!isOpen) {
+            togglePanel('open');
+        } 
+    }
+
     // Fonction pour ouvrir/fermer le panneau
     function togglePanel(action) {
-        const panelWidth = "300px";
         const panel = document.getElementById("panel");
         const mapContainer = document.getElementById("map");
         const openButtons = document.querySelectorAll('.openbtn');
@@ -51,9 +70,6 @@ $(document).ready(function () {
         });
         // Afficher le fieldset correspondant à l'onglet sélectionné
         document.getElementById(ongletId).style.display = 'block';
-        // Afficher fildeset seconde intention
-        if (ongletId === 'onglet_laboratoire' || ongletId === 'onglet_resultat') {
-        };
         var boutons = document.querySelectorAll('#onglets button');
         boutons.forEach(function(bouton) {
             bouton.classList.remove('actif');
@@ -85,7 +101,22 @@ $(document).ready(function () {
         afficherOnglet('onglet_captages');
     });
 
+    // Programme de dépliement et rabbatage de la partie Plus d'information du popup démarches
+    function moreInfoAction () {
+        // Section - Plus d'information
+        const moreInfoButton = document.getElementById('more_info_button');
+        const moreInfo = document.getElementById('more_info');
+        moreInfoButton.addEventListener('click', function() {
+            moreInfo.classList.toggle('open');
+        });
+        // Section - Aller plus loin
+        const moreInfoButton2 = document.getElementById('more_info_button2');
+        const moreInfo2 = document.getElementById('more_info2');
+        moreInfoButton2.addEventListener('click', function() {
+            moreInfo2.classList.toggle('open');
+        });
 
+    }
 
     // ------------------------------------------------------------------------------------------------------------
     ///// Création de l'objet carte 
@@ -171,6 +202,55 @@ $(document).ready(function () {
         //aac.bringToFront();
     };
 
+    // Afficher les infos de la démarche lors du clic
+    function showDemarcheInfo(feature) {
+        openPanel(); // Ouvre le panneau latéral si nécessaire
+        afficherOnglet('onglet_demarches'); // ouvrir l'oonglet Dméraches du panneau
+        const infoContent = document.getElementById('onglet_demarches');
+        infoContent.innerHTML = `
+            <p class="popup_demarche_titre"> ${feature.properties.nom} </p>
+            <span class="popup_demarche_partie"> Type de démarche </span>
+            <span class="popup_info"> ${feature.properties.type} </span>
+            <span class="popup_demarche_partie"> Structure en charge de la structure </span>
+            <span class="popup_info"> ${feature.properties.structure_animation} </span>
+            <span class="popup_demarche_partie"> Animatrice(teur) </span>
+            <span class="popup_info"> ${feature.properties.animateur} </span>
+            <span class="popup_info"> ${feature.properties.mail} </span>
+            <span class="popup_info"> ${feature.properties.telephone} </span>
+            <div class="more_info" id="more_info">
+                <div class="more_info_button" id="more_info_button">Plus d'informations</div>
+                <div class="more_info_content">
+                    <span class="popup_demarche_titre_champs"> Enjeux </span>
+                    <span class="popup_info"> ${feature.properties.enjeux_chimique_eau} </span>
+                    <span class="popup_demarche_titre_champs"> Nombre de communes intersectées par le périmètre </span>
+                    <span class="popup_info"> ${feature.properties.nb_communes_intersectees} </span>
+                    <span class="popup_demarche_titre_champs"> Surface du périmètre d'action (ha) </span>
+                    <span class="popup_info"> ${feature.properties.surface_zone_action} </span>
+                    <span class="popup_demarche_titre_champs"> Année de début de la démarche </span>
+                    <span class="popup_info"> ${feature.properties.annee_debut} </span>
+                    <span class="popup_demarche_titre_champs"> État de la démarche </span>
+                    <span class="popup_info"> ${feature.properties.statut} </span>
+                    <span class="popup_demarche_titre_champs"> Nombre de renouvellement </span>
+                    <span class="popup_info"> ${feature.properties.nb_renouvellement} </span>
+                    <span class="popup_demarche_titre_champs"> Période d'évaluation </span>
+                    <span class="popup_info"> ${feature.properties.periode_evaluation} </span>
+                    <span class="popup_demarche_titre_champs"> Membre du réseau </span>
+                    <span class="popup_info"> ${feature.properties.membre_reseau} </span>
+                </div>
+            </div>
+            <div class="more_info" Id="more_info2">
+                <div class="more_info_button" id="more_info_button2">Aller plus loin</div>
+                <div class="more_info_content">
+                    <span class="popup_demarche_titre_champs2"> Rendez-vous sur  </span>
+                    <span class="popup_info2"> <a href="${feature.properties.lien}"  target="_blank"> ${feature.properties.lien}</a> </span>
+                </div>
+            </div>
+        `;
+        // Paramétrage du popup (sections rabatues)
+        moreInfoAction();
+    }
+    
+
     // Appliqué à chaque démarche
 	function onEachFeature_demarches(feature, layer) {
 
@@ -181,7 +261,10 @@ $(document).ready(function () {
         layer.on({
             mouseover: highlightFeature,
             mouseout: resetHighlight,
-            //click: zoomToFeature
+            click: function (e) {
+                zoomToFeature(e);
+                showDemarcheInfo(feature);
+            }
         });
     };
 
@@ -231,10 +314,13 @@ $(document).ready(function () {
     // Toutes les AAC qui n'ont pas de démarches associées directement
 
     const aac = L.geoJSON(null,{
-        color:'rgb(87,107,53)',
-        weight:2,
-        fillColor: 'rgb(87,107,53)',
-        fillOpacity: 0.5,
+        style : {
+            color:'rgb(87,107,53)',
+            weight:2,
+            fillColor: 'rgb(87,107,53)',
+            fillOpacity: 0.5
+        },
+        interactive: false // couche non cliquable
     });
     $.getJSON('data/aac_oc.geojson', function(data){
         aac.addData(data).addTo(map);
@@ -251,7 +337,7 @@ $(document).ready(function () {
         return (type_captage === 'Sensible') ? 'assets/images/goutte_j.png' : 'assets/images/goutte_b.png';
     }
 
-    // Construcion du marqueur de la couche des captages (prioritaire ou sensible)
+    // Construction du marqueur de la couche des captages (prioritaire ou sensible)
     function captageIcon (type_captage) {
         var chemin_icone = getIconPath(type_captage);
         return new L.Icon({

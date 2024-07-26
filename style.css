@@ -1,3 +1,20 @@
+/* ----- GENERAL ----- */
+
+@font-face {
+    font-family: 'FilsonPro';
+    src: url('assets/fonts/Mostardesign - FilsonProMedium.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'SourceSansPro';
+    src: url('assets/fonts/SourceSansPro-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
 body, html {
     margin: 0;
     padding: 0;
@@ -9,14 +26,8 @@ html, body {
     height: 100%;
     margin: 0;
 }
-.leaflet-container {
-    height: 100%;
-    width: 100%;
-    max-width: 100%;
-    max-height: 100%;
-}
 
-/* LOADER */
+/* ----- LOADER ----- */
 
 #loader {
     display: flex;
@@ -43,8 +54,12 @@ html, body {
     }
 }
 
+/* ----- CARTE ----- */
 
-/* CARTE */
+.leaflet-container {
+    max-width: 100%;
+    max-height: 100%;
+}
 
 #map {
     height: 100vh;
@@ -66,9 +81,9 @@ html, body {
 }
 
 
-/* PANNEAU LATERAL */
+/* ----- PANNEAU LATERAL DROIT ----- */
 
-/* Style pour le panneau rabattable */
+/* Panneau rabattable */
 #panel {
     height: 100%;
     width: 0;
@@ -84,12 +99,13 @@ html, body {
     background-color: #007c8e;
 }
 
-/* Style pour le contenu du panneau */
+/* Contenu du panneau */
 #panel-content {
     padding: 0px;
     padding-top: 5px;
 }
 
+/* -- Deux boutons panneau fermé et bouton panneau ouvert -- */
 .openbtn {
     background-color: white;
     border-color: #007c8e;
@@ -116,12 +132,25 @@ html, body {
     position: fixed;
 }
 
+/* Logo dans bouton */
 .logo_lateral{
     height : 50px;
     width : 50px;
 }
 
+#bt_fermer {
+    background-color: transparent;
+    color: white;
+    margin-left : 5px;
+    border: 2px solid white;
+    border-radius : 2px;
+}
+
+/* --- POPUP--- */
+
+/* -- Navigation -- */
 .bt_onglet {
+    font-family: 'FilsonPro', sans-serif;
     display: flex;
     align-items: center;
     padding: 5px 10px;
@@ -141,14 +170,6 @@ html, body {
     font-weight: bold;
 }
 
-#bt_fermer {
-    background-color: transparent;
-    color: white;
-    margin-left : 5px;
-    border: 2px solid white;
-    border-radius : 2px;
-}
-
 .onglet {
     display: flex;
     gap: 4px; /* Espace entre les boutons */
@@ -158,13 +179,118 @@ html, body {
 .image_onglet{
     height : 40px;
     width : 40px;   
-    margin-right: 10px; /* Espace entre l'image et le texte */
+    margin-right: 5px; /* Espace entre l'image et le texte */
 }
 
+/* -- Contenu des onglets -- */
+
 fieldset {
+    font-family: 'SourceSansPro', sans-serif;
     border: 2px solid #007c8e;
     border-top : none;
     margin: 0px;
     background-color : white;
     height : 100%;
+    padding : 5px 0 10px 0;
+    overflow-y: auto; /* Affiche une barre de défilement verticale si le contenu dépasse */
+    border-radius: 0 0 10px 10px;
 }
+
+/* Popup Démarche */
+
+.popup_demarche_titre {
+    font-family: 'FilsonPro', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 1.2em;
+    margin : 10px 0 10px 0;
+}
+
+.popup_demarche_partie {
+    font-family: 'FilsonPro', sans-serif;
+    display: block;
+    width: 100%;
+    background-color: rgb(108,178,188); /* Couleur de fond, vous pouvez la changer selon vos besoins */
+    color: white; /* Couleur du texte */
+    padding: 5px 0; /* Padding en haut et en bas */
+    margin: 10px 0; /* Espacement au-dessus et en dessous du bandeau */
+    text-align: center;
+    /* font-weight: bold; */
+}
+
+.popup_info {
+    color: #007c8e;
+    display: block;
+    padding : 0 3px 0 3px;
+}
+
+.popup_info2 {
+    color: white;
+    display: block;
+    padding : 0 3px 0 3px;
+}
+
+.popup_demarche_titre_champs{
+    font-family: 'FilsonPro', sans-serif;
+    display: block;
+    padding : 0 3px 0 3px;
+    color: #919191;
+}
+
+.popup_demarche_titre_champs2{
+    font-family: 'FilsonPro', sans-serif;
+    display: block;
+    padding : 0 3px 0 3px;
+    color: white;
+}
+
+#more_info{
+    background-color:rgb(244,226,186);
+}
+
+#more_info2{
+    background-color: #D6970A;
+}
+
+.more_info_button {
+    font-family: 'FilsonPro', sans-serif;
+    margin-top: 10px;
+    padding: 5px 0 5px 0;
+    cursor: pointer;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#more_info_button{
+    color: #d6970a;
+}
+
+#more_info_button2{
+    color: white;
+}
+
+.more_info_button::after {
+
+    content: '▽';
+    font-size: 1em;
+    margin-left: 10px; /* Espace entre le texte et la flèche */
+    transition: transform 0.3s;
+}
+
+.more_info.open .more_info_button::after {
+    transform: rotate(180deg);
+}
+
+.more_info_content {
+    display: none;
+}
+
+.more_info.open .more_info_content {
+    display: block;
+}
+
