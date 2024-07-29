@@ -275,7 +275,6 @@ fieldset {
 }
 
 .more_info_button::after {
-
     content: '▽';
     font-size: 1em;
     margin-left: 10px; /* Espace entre le texte et la flèche */
@@ -294,3 +293,44 @@ fieldset {
     display: block;
 }
 
+/* Popup Captage */
+
+.captage-info {
+    position: relative;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.captage-info.expanded {
+    background-color: #f70a0a;
+}
+
+.captage-info p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.captage-details {
+    display: none;
+    margin-top: 10px;
+}
+
+.captage-info.expanded .captage-details {
+    display: block;
+}
+
+.captage-info .toggle-icon::before {
+    content: '▼';
+    display: inline-block;
+    margin-left: 10px;
+    transition: transform 0.3s ease;
+}
+
+.captage-info.expanded .toggle-icon::before {
+    transform: rotate(-180deg);
+}
