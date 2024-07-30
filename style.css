@@ -293,19 +293,51 @@ fieldset {
     display: block;
 }
 
+.no_demarche{
+    text-align : center;
+    padding: 2px;
+    margin : 10px 3px 10px 3px;
+}
+
+.demarche_non_ouvrage{
+    color: #d6970a ;
+    font-weight: bold;
+}
+
+a.lien_contact {
+    font-family: 'FilsonPro', sans-serif;
+    color: #e17a0c; /* Couleur du texte */
+    text-decoration: none; /* Supprime le soulignement par défaut */
+    padding: 10px 15px; /* Espacement interne */
+    border-radius: 5px; /* Coins arrondis */
+    background-color: #f9f9f9; /* Couleur de fond */
+    border: 1px solid #e17a0c; /* Bordure */
+    display: inline-block; /* Pour gérer les marges et le padding */
+    transition: background-color 0.3s, color 0.3s; /* Transitions pour le survol */
+}
+
+a.lien_contact:hover {
+    background-color: #e17a0c; /* Couleur de fond au survol */
+    color: #ffffff; /* Couleur du texte au survol */
+}
+
+a.lien_contact:active {
+    background-color: #b65f02; /* Couleur de fond lors du clic */
+}
+
 /* Popup Captage */
 
 .captage-info {
     position: relative;
     margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid #ddd;
+    padding: 0px;
+    border: 1px solid rgb(245,227,187);
     border-radius: 5px;
     cursor: pointer;
 }
 
 .captage-info.expanded {
-    background-color: #f70a0a;
+    background-color: #f5f5f5;
 }
 
 .captage-info p {
@@ -313,6 +345,39 @@ fieldset {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.captage-title{
+    font-family: 'FilsonPro', sans-serif;
+    color: #d6970a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(245,227,187);
+    padding: 5px;
+}
+
+.captage-title-text{
+    text-align: center;
+}
+
+.captage_nom_champ{
+    font-family: 'FilsonPro', sans-serif;
+    display: block;
+    width: 100%;
+    background-color: rgb(108,178,188); /* Couleur de fond, vous pouvez la changer selon vos besoins */
+    color: white; /* Couleur du texte */
+    padding: 3px 0; /* Padding en haut et en bas */
+    margin: 5px 0; /* Espacement au-dessus et en dessous du bandeau */
+    text-align: center;
+    /* font-weight: bold; */
+}
+
+.captage_champ_info{
+    font-size: 0.9rem;
+    color: #007c8e;
+    display: block;
+    padding : 0 3px 0 3px;
 }
 
 .captage-details {

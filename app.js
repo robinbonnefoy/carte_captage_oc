@@ -210,6 +210,8 @@ $(document).ready(function () {
             <p class="popup_demarche_titre"> ${feature.properties.nom} </p>
             <span class="popup_demarche_partie"> Type de démarche </span>
             <span class="popup_info"> ${feature.properties.type} </span>
+            <span class="popup_demarche_partie"> Statut de la démarche </span>
+             <span class="popup_info"> ${feature.properties.statut} </span>
             <span class="popup_demarche_partie"> Structure en charge de l'animation </span>
             <span class="popup_info"> ${feature.properties.structure_animation} </span>
             <span class="popup_demarche_partie"> Animatrice(teur) </span>
@@ -227,8 +229,6 @@ $(document).ready(function () {
                     <span class="popup_info"> ${feature.properties.surface_zone_action} </span>
                     <span class="popup_demarche_titre_champs"> Année de début de la démarche </span>
                     <span class="popup_info"> ${feature.properties.annee_debut} </span>
-                    <span class="popup_demarche_titre_champs"> État de la démarche </span>
-                    <span class="popup_info"> ${feature.properties.statut} </span>
                     <span class="popup_demarche_titre_champs"> Nombre de renouvellement </span>
                     <span class="popup_info"> ${feature.properties.nb_renouvellement} </span>
                     <span class="popup_demarche_titre_champs"> Période d'évaluation </span>
@@ -258,6 +258,21 @@ $(document).ready(function () {
                 fillDemarcheInfo(layer.feature);
             }
         });
+    }
+
+    // Remplir l'onglet démarche quand pas de démarches associées au captage
+    function fillNoDemarche (nom_ouvrage) {
+        fieldset_demarches.innerHTML = `
+            <div class="no_demarche"> 
+                Si vous avez connaissance d'une démarche en cours associée au captage 
+                </br>
+                </br> 
+                <span class="captage-title">${nom_ouvrage}</span>
+                </br>
+                </br>
+                <a href="https://www.fredonoccitanie.com/captages/nous-contacter/" class="lien_contact" target="_blanck"> CONTACTEZ-NOUS !</a>
+            </div>
+        `;
     }
 
     // Afficher les infos de la démarche lors du clic
@@ -290,31 +305,32 @@ $(document).ready(function () {
     /// Style
     function style_demarches (feature) {
         var style;
-        // Démarches en cours
-        if (feature.properties.type_web === 'autre' && feature.properties.statut_web !== 'terminee' ) {
+        // Démarches
+        if (feature.properties.type_web === 'autre') {
             style = {
                 color:'rgb(000,124,142)',
                 weight:2,
                 fillColor: 'rgb(000,124,142)',
                 fillOpacity: 0.5,
             }
-        // AAC ou PAT en cours
-        } else if ((feature.properties.type_web === 'AAC') && feature.properties.statut_web !== 'terminee') {
+        // AAC ou PAT 
+        } else if ((feature.properties.type_web === 'AAC')) {
             style = {
                 color:'rgb(87,107,53)',
                 weight:2,
                 fillColor: 'rgb(87,107,53)',
                 fillOpacity: 0.5,
             }
-        // AAC
-        } else {
-            style = {
-                color:'rgb(164,165,164)',
-                weight:2,
-                fillColor: 'rgb(164,165,164)',
-                fillOpacity: 0.5,
-            }
         }
+        // Démarche terminées
+        // } else {
+        //     style = {
+        //         color:'rgb(164,165,164)',
+        //         weight:2,
+        //         fillColor: 'rgb(164,165,164)',
+        //         fillOpacity: 0.5,
+        //     }
+        // }
         return style;
     }
 
@@ -408,16 +424,37 @@ $(document).ready(function () {
     function CaptageInfo(feature) {
         var properties = feature.properties;
         return (`
-            <div class"captage_title"> 
-                ${properties.nom_ouvrage}
+            <div class="captage-title"> 
+                <span class="captage-title-text"> ${properties.nom_ouvrage} </span>
                 <span class="toggle-icon"></span>
             </div>
             <div class="captage-details">
-                <p><strong>Type :</strong> ${properties.type}</p>
-                <p><strong>Structure en charge :</strong> ${properties.structure_animation}</p>
-                <p><strong>Animateur :</strong> ${properties.animateur}</p>
-                <p><strong>Email :</strong> ${properties.mail}</p>
-                <p><strong>Téléphone :</strong> ${properties.telephone}</p>
+                <span class="captage_nom_champ"> Bassin </span>
+                <span class="captage_champ_info"> ${properties.bassin} </span>
+                <span class="captage_nom_champ"> Code ouvrage </span>
+                <span class="captage_champ_info"> ${properties.code_points_prelevements} </span>
+                <span class="captage_nom_champ"> Statut </span>
+                <span class="captage_champ_info"> ${properties.statut} </span>
+                <span class="captage_nom_champ"> Maître d'ouvrage </span>
+                <span class="captage_champ_info"> ${properties.maitre_ouvrage} </span>
+                <span class="captage_nom_champ"> Origine de la ressource </span>
+                <span class="captage_champ_info"> ${properties.origine_ressource} </span>
+                <span class="captage_nom_champ"> Type de captage </span>
+                <span class="captage_champ_info"> ${properties.type_captage} </span>
+                <span class="captage_nom_champ"> Commune d'implantation </span>
+                <span class="captage_champ_info"> ${properties.nom_com} (${properties.insee_com}) </span>
+                <span class="captage_nom_champ"> Enjeux </span>
+                <span class="captage_champ_info"> ${properties.enjeux_pollutions} </span>
+                <span class="captage_nom_champ"> Population alimentée par l'ouvrage </span>
+                <span class="captage_champ_info"> ${properties.population_alimentee} </span>
+                <span class="captage_nom_champ"> Arrêtés de dérogation aux limites de qualité de l'eau du robinet </span>
+                <span class="captage_champ_info"> ${properties.arretes_zsce} </span>
+                <span class="captage_nom_champ"> Réseau complémentaire de suivi </span>
+                <span class="captage_champ_info"> ${properties.reseau_complementaire} </span>
+                <span class="captage_nom_champ"> Date de début de suivi </span>
+                <span class="captage_champ_info"> ${properties.date_debut_suivi} </span>
+                <span class="popup_demarche_titre_champs2"> Rendez-vous sur  </span>
+                <span class="captage_champ_info"> <a href="${properties.lien}"  target="_blank"> ${properties.lien}</a> </span>
             </div>
         `);
     }
@@ -475,9 +512,11 @@ $(document).ready(function () {
         if (idDemarcheWeb === 'non') {
             // pas de démarche associée, on affiche les infos du captage
             fillCaptageInfo(feature);
+            fillNoDemarche(feature.properties.nom_ouvrage);
         } else {
             // une démarche associée, on affiche les infos de tous les capatges de la démarches
-            fillAllCaptagesInfo(idDemarcheWeb); // Compléter le contenu du fieldset captage
+            fillAllCaptagesInfo(idDemarcheWeb); // Compléter le contenu du fieldset Captages
+            fillDemarcheFromIDWeb(feature.properties.id_demarche_web); // Compléter le contenu du fieldset Démarche
         }
         openPopupSelectedCaptage(idCaptageWeb); // déplie le popup du captage sélectionné
     }
@@ -492,7 +531,6 @@ $(document).ready(function () {
             click: function (e) {
                 clickZoom(e);
                 showPopupCaptage(feature);
-                fillDemarcheFromIDWeb(feature.properties.id_demarche_web);
             }
           });
     }
