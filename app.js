@@ -28,6 +28,11 @@ $(document).ready(function () {
 
     /// Panneau latéral
 
+    // Récupère le nom de domaine d'une url
+    function extractDomainFromUrl (url) {
+        return new URL(url).hostname;
+    }
+
     // Vérifie si le pannneau latéral est ouvert, et l'ouvre si nécessaire
     function openPanel (){
         const panel = document.getElementById("panel");
@@ -103,21 +108,14 @@ $(document).ready(function () {
         afficherOnglet('onglet_captages');
     });
 
-    // Programme de dépliement et rabbatage de la partie Plus d'information du popup démarches
-    function moreInfoAction () {
+    // Programme de dépliement et rabbatage de la partie Plus d'information du popup démarches / captages
+    function moreInfoAction (idButton, idParentContainer) {
         // Section - Plus d'information
-        const moreInfoButton = document.getElementById('more_info_button');
-        const moreInfo = document.getElementById('more_info');
+        const moreInfoButton = document.getElementById(idButton);
+        const moreInfo = document.getElementById(idParentContainer);
         moreInfoButton.addEventListener('click', function() {
             moreInfo.classList.toggle('open');
         });
-        // Section - Aller plus loin
-        const moreInfoButton2 = document.getElementById('more_info_button2');
-        const moreInfo2 = document.getElementById('more_info2');
-        moreInfoButton2.addEventListener('click', function() {
-            moreInfo2.classList.toggle('open');
-        });
-
     }
 
     // ------------------------------------------------------------------------------------------------------------
@@ -237,16 +235,17 @@ $(document).ready(function () {
                     <span class="popup_info"> ${feature.properties.membre_reseau} </span>
                 </div>
             </div>
-            <div class="more_info" Id="more_info2">
+            <div class="more_info" id="more_info2">
                 <div class="more_info_button" id="more_info_button2">Aller plus loin</div>
                 <div class="more_info_content">
                     <span class="popup_demarche_titre_champs2"> Rendez-vous sur  </span>
-                    <span class="popup_info2"> <a href="${feature.properties.lien}"  target="_blank"> ${feature.properties.lien}</a> </span>
+                    <span class="popup_info2"> <a href="${feature.properties.lien}"  target="_blank" class="demarche_link"> ${extractDomainFromUrl(feature.properties.lien)}</a> </span>
                 </div>
             </div>
         `;
         // Paramétrage du popup (sections rabatues)
-        moreInfoAction();
+        moreInfoAction('more_info_button','more_info');
+        moreInfoAction('more_info_button2','more_info2');
     }
 
     // Remplir la démarche à partir de l'id_demarche_web
@@ -261,13 +260,10 @@ $(document).ready(function () {
     }
 
     // Remplir l'onglet démarche quand pas de démarches associées au captage
-    function fillNoDemarche (nom_ouvrage) {
+    function fillNoDemarche () {
         fieldset_demarches.innerHTML = `
             <div class="no_demarche"> 
                 Si vous avez connaissance d'une démarche en cours associée au captage 
-                </br>
-                </br> 
-                <span class="captage-title">${nom_ouvrage}</span>
                 </br>
                 </br>
                 <a href="https://www.fredonoccitanie.com/captages/nous-contacter/" class="lien_contact" target="_blanck"> CONTACTEZ-NOUS !</a>
@@ -340,7 +336,6 @@ $(document).ready(function () {
         attribution: 'FREDON Occitanie'
     });
     $.getJSON('data/demarches.geojson', function(data){
-        console.log(data);
         demarches.addData(data).addTo(map);
     });
 
@@ -424,15 +419,11 @@ $(document).ready(function () {
     function CaptageInfo(feature) {
         var properties = feature.properties;
         return (`
-            <div class="captage-title"> 
+            <div class="captage-title" id="captage_title_${properties.id_captage_web}"> 
                 <span class="captage-title-text"> ${properties.nom_ouvrage} </span>
                 <span class="toggle-icon"></span>
             </div>
             <div class="captage-details">
-                <span class="captage_nom_champ"> Bassin </span>
-                <span class="captage_champ_info"> ${properties.bassin} </span>
-                <span class="captage_nom_champ"> Code ouvrage </span>
-                <span class="captage_champ_info"> ${properties.code_points_prelevements} </span>
                 <span class="captage_nom_champ"> Statut </span>
                 <span class="captage_champ_info"> ${properties.statut} </span>
                 <span class="captage_nom_champ"> Maître d'ouvrage </span>
@@ -441,35 +432,51 @@ $(document).ready(function () {
                 <span class="captage_champ_info"> ${properties.origine_ressource} </span>
                 <span class="captage_nom_champ"> Type de captage </span>
                 <span class="captage_champ_info"> ${properties.type_captage} </span>
+                <span class="captage_nom_champ"> Bassin </span>
+                <span class="captage_champ_info"> ${properties.bassin} </span>
                 <span class="captage_nom_champ"> Commune d'implantation </span>
                 <span class="captage_champ_info"> ${properties.nom_com} (${properties.insee_com}) </span>
-                <span class="captage_nom_champ"> Enjeux </span>
-                <span class="captage_champ_info"> ${properties.enjeux_pollutions} </span>
-                <span class="captage_nom_champ"> Population alimentée par l'ouvrage </span>
-                <span class="captage_champ_info"> ${properties.population_alimentee} </span>
-                <span class="captage_nom_champ"> Arrêtés de dérogation aux limites de qualité de l'eau du robinet </span>
-                <span class="captage_champ_info"> ${properties.arretes_zsce} </span>
-                <span class="captage_nom_champ"> Réseau complémentaire de suivi </span>
-                <span class="captage_champ_info"> ${properties.reseau_complementaire} </span>
-                <span class="captage_nom_champ"> Date de début de suivi </span>
-                <span class="captage_champ_info"> ${properties.date_debut_suivi} </span>
-                <span class="popup_demarche_titre_champs2"> Rendez-vous sur  </span>
-                <span class="captage_champ_info"> <a href="${properties.lien}"  target="_blank"> ${properties.lien}</a> </span>
+                <div class="captage_more_info" id="captage_more_info_${properties.id_captage_web}">
+                    <div class="captage_more_info_button" id="captage_more_info_button_${properties.id_captage_web}">
+                        Plus d'informations
+                    </div>
+                    <div class="captage_more_info_content">
+                        <span class="captage_more_info_champ"> Code ouvrage </span>
+                        <span class="captage_champ_info"> ${properties.code_points_prelevements} </span>
+                        <span class="captage_more_info_champ"> Population alimentée par l'ouvrage </span>
+                        <span class="captage_champ_info"> ${properties.population_alimentee} </span>
+                        <span class="captage_more_info_champ"> Enjeux </span>
+                        <span class="captage_champ_info"> ${properties.enjeux_pollutions} </span>
+                        <span class="captage_more_info_champ"> Réseau complémentaire de suivi </span>
+                        <span class="captage_champ_info"> ${properties.reseau_complementaire} </span>
+                        <span class="captage_more_info_champ"> Date de début de suivi </span>
+                        <span class="captage_champ_info"> ${properties.date_debut_suivi} </span>
+                        <span class="captage_more_info_champ"> Arrêté de dérogation aux limites de qualité de l'eau du robinet </span>
+                        <span class="captage_champ_info"> ${properties.arretes_zsce} </span>
+                        <span class="captage_more_info_champ" style="color:#e17a0c;"> Rendez-vous sur  </span>
+                        <span class="captage_champ_info"> <a href="${properties.lien}"  target="_blank" class="captage_link"> ${extractDomainFromUrl(properties.lien)}</a> </span>
+                    </div>
+                </div>
             </div>
         `);
     }
     
     // Contruit le conteneur des infos d'un captage
     function fillCaptageInfo (feature){
+        var idCaptageWeb = feature.properties.id_captage_web;
         var captageInfo = document.createElement('div');
         captageInfo.className = 'captage-info';
         captageInfo.innerHTML = CaptageInfo(feature);
-        captageInfo.id = feature.properties.id_captage_web; // id du conteneur captage-info est id_captage_web
+        captageInfo.id = idCaptageWeb ; // id du conteneur captage-info est id_captage_web
         fieldset_captages.appendChild(captageInfo);
-        captageInfo.addEventListener('click', function(event) {
+        // Dépliement des infos du captage
+        console.log('captage_title_'+ idCaptageWeb);
+        document.getElementById('captage_title_' + idCaptageWeb).addEventListener('click', function(event) {
             event.stopPropagation();
             toggleCaptageDetails(captageInfo);
         });
+        // Dépliement de la partie plus d'informations
+        moreInfoAction ('captage_more_info_button_'+ idCaptageWeb, 'captage_more_info_'+ idCaptageWeb) 
     }
 
 
@@ -512,7 +519,7 @@ $(document).ready(function () {
         if (idDemarcheWeb === 'non') {
             // pas de démarche associée, on affiche les infos du captage
             fillCaptageInfo(feature);
-            fillNoDemarche(feature.properties.nom_ouvrage);
+            fillNoDemarche();
         } else {
             // une démarche associée, on affiche les infos de tous les capatges de la démarches
             fillAllCaptagesInfo(idDemarcheWeb); // Compléter le contenu du fieldset Captages
