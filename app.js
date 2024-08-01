@@ -1,10 +1,12 @@
 $(document).ready(function () {
     // ------------------------------------------------------------------------------------------------------------
-    ///// Constantes
+    ///// Constantes et variables globales
 
-    const panelWidth = "300px";
-    const fieldset_captages = document.getElementById('onglet_captages');
-    const fieldset_demarches = document.getElementById('onglet_demarches');
+    const panelWidth = "300px"; // largeur du panneau latéral de droite
+    const fieldset_captages = document.getElementById('onglet_captages'); // id du fieldset de l'onglet Captages du panneau latéral de droite
+    const fieldset_demarches = document.getElementById('onglet_demarches'); // id du fieldset de l'onglet Démarches du panneau latéral de droite
+    var selectedIdDemarcheWeb = null ; // id_demarche_web de la Démarche sélectionnée
+    var selectedIdCaptageWeb = null ; // id_captage_web du captage sélectionnée
     
     // ------------------------------------------------------------------------------------------------------------
     ///// Méthodes
@@ -57,6 +59,11 @@ $(document).ready(function () {
             openButtons.forEach(button => {
                 button.style.display = 'block';
             });
+            // Réinitialiser les styles des démarches et captages sélectionnés
+            resetHighlightSelectedFeature();
+            // Réinitialiser les popups
+            defautPopupDemarche();
+            defaultPopupCaptage();
         } else {
             // Ouvrir le panneau
             panel.style.width = panelWidth;
@@ -197,10 +204,49 @@ $(document).ready(function () {
 
     // Fin de l'action du survol avec la souris
 	function resetHighlight(e) {
-        demarches.resetStyle(e.target);
-
-        //aac.bringToFront();
+        var layer = e.target ;
+        var idDemarcheWeb = layer.feature.properties.id_demarche_web ;
+        if (idDemarcheWeb === selectedIdDemarcheWeb) {
+            // si la démarche est celle qui est sélectionnée, on applique la mise en forme spécifique de la démarche sélectionnée
+            highlightSelectedFeature(e);
+        } else {
+            // sinon on réinitialise le style de la démarche
+            demarches.resetStyle(layer);
+        }
     };
+
+    // Mise en forme de la démarche sélectionnée
+    function highlightSelectedFeature(e) {
+        var layer = e.target;
+        selectedIdDemarcheWeb = layer.feature.properties.id_demarche_web ;
+        layer.setStyle({
+            weight: 5,
+            color: '#e17a0c',
+            dashArray: '',
+            fillColor : '#e17a0c',
+            // fillOpacity: 0.7
+        });
+        // Assurez-vous de ramener en avant uniquement sur le clic
+        // if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        //     layer.bringToFront();
+        // }
+    }
+
+    // Réinitialise le style de l'entité sélectionnée 
+    function resetHighlightSelectedFeature (){
+        if (!!selectedIdDemarcheWeb){
+        // si une démarche est sélectionnée
+            demarches.eachLayer(function (layer) {
+                // Si le captage est associé à la démarche
+                if (layer.feature.properties.id_demarche_web === selectedIdDemarcheWeb) {
+                    // On complète les infos du captage
+                    fillDemarcheInfo(layer.feature);
+                    demarches.resetStyle(layer);
+                }
+            });
+            selectedIdDemarcheWeb = null; 
+        }
+    }
 
     // Remplir les infos de la démarche de la Partie "Démarche territoriale"
     function fillDemarcheInfo(feature){
@@ -270,6 +316,15 @@ $(document).ready(function () {
             </div>
         `;
     }
+        
+    // Réinitialiser le contenu du fieldset Démarche
+    function defautPopupDemarche() {
+        fieldset_demarches.innerHTML = `
+            <div class="no_demarche"> 
+                Aucune démarche sélectionnée
+            </div>
+        `;
+    }
 
     // Afficher les infos de la démarche lors du clic
     function showDemarcheInfo(feature) {
@@ -290,6 +345,8 @@ $(document).ready(function () {
             mouseover: highlightFeature,
             mouseout: resetHighlight,
             click: function (e) {
+                resetHighlightSelectedFeature(); // réinitialisation du style d'une démarche sélectionnée
+                highlightSelectedFeature(e);
                 zoomToFeature(e);
                 showDemarcheInfo(feature);
                 reinitializeCaptage(); // Réinitialiser les infos de la partie "Captages associé(s)"
@@ -412,7 +469,16 @@ $(document).ready(function () {
 
     // Réinitialiser le contenu du fieldset Captages
     function reinitializeCaptage () {
-        fieldset_captages.innerHTML = ''; // Réinitialiser le contenu du fieldset
+        fieldset_captages.innerHTML = '';
+    }
+
+    // Réinitialiser le contenu du fieldset Captages
+    function defaultPopupCaptage () {
+        fieldset_captages.innerHTML = `
+            <div class="no_demarche"> 
+                Aucun captage sélectionné
+            </div>`
+        ;
     }
 
     // Construit les infos d'un captage
