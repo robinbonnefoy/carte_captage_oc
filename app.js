@@ -25,8 +25,8 @@ $(document).ready(function () {
     // Zoom sur l'entité polygonale sélectionnée
 	function zoomToFeature(e) {
         map.fitBounds(e.target.getBounds(),{maxZoom : 12});
+        map.panBy([-300 / 2, 0], { animate: false }); // Décale la carte vers la gauche pour compenser le paneau latéral
     };
-
 
     /// Panneau latéral
 
@@ -61,6 +61,7 @@ $(document).ready(function () {
             });
             // Réinitialiser les styles des démarches et captages sélectionnés
             resetHighlightSelectedFeature();
+            resetHighlightSelectedMarker();
             // Réinitialiser les popups
             defautPopupDemarche();
             defaultPopupCaptage();
@@ -208,7 +209,7 @@ $(document).ready(function () {
         var idDemarcheWeb = layer.feature.properties.id_demarche_web ;
         if (idDemarcheWeb === selectedIdDemarcheWeb) {
             // si la démarche est celle qui est sélectionnée, on applique la mise en forme spécifique de la démarche sélectionnée
-            highlightSelectedFeature(e);
+            highlightSelectedFeature(e.target);
         } else {
             // sinon on réinitialise le style de la démarche
             demarches.resetStyle(layer);
@@ -216,8 +217,7 @@ $(document).ready(function () {
     };
 
     // Mise en forme de la démarche sélectionnée
-    function highlightSelectedFeature(e) {
-        var layer = e.target;
+    function highlightSelectedFeature(layer) {
         selectedIdDemarcheWeb = layer.feature.properties.id_demarche_web ;
         layer.setStyle({
             weight: 5,
@@ -232,15 +232,13 @@ $(document).ready(function () {
         // }
     }
 
-    // Réinitialise le style de l'entité sélectionnée 
+    // Réinitialise le style de la démarche sélectionnée 
     function resetHighlightSelectedFeature (){
         if (!!selectedIdDemarcheWeb){
         // si une démarche est sélectionnée
             demarches.eachLayer(function (layer) {
-                // Si le captage est associé à la démarche
+                // Si la démarche est sélectionnée
                 if (layer.feature.properties.id_demarche_web === selectedIdDemarcheWeb) {
-                    // On complète les infos du captage
-                    fillDemarcheInfo(layer.feature);
                     demarches.resetStyle(layer);
                 }
             });
@@ -297,10 +295,12 @@ $(document).ready(function () {
     // Remplir la démarche à partir de l'id_demarche_web
     function fillDemarcheFromIDWeb (idDemarcheWeb){
         demarches.eachLayer(function (layer) {
-            // Si le captage est associé à la démarche
+            // Si la démarche est associée au captage
             if (layer.feature.properties.id_demarche_web === idDemarcheWeb) {
                 // On complète les infos du captage
                 fillDemarcheInfo(layer.feature);
+                // On met sélectionne la démarche correspondante
+                highlightSelectedFeature(layer);
             }
         });
     }
@@ -345,8 +345,9 @@ $(document).ready(function () {
             mouseover: highlightFeature,
             mouseout: resetHighlight,
             click: function (e) {
+                resetHighlightSelectedMarker(); // désélectionne le captage
                 resetHighlightSelectedFeature(); // réinitialisation du style d'une démarche sélectionnée
-                highlightSelectedFeature(e);
+                highlightSelectedFeature(e.target); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
                 zoomToFeature(e);
                 showDemarcheInfo(feature);
                 reinitializeCaptage(); // Réinitialiser les infos de la partie "Captages associé(s)"
@@ -435,9 +436,20 @@ $(document).ready(function () {
         });
     }
 
+    // Marker du capatge par défault
+    function defaultMarker (layer) {
+        var marker = layer;
+        const icon = new L.Icon({
+            iconUrl: getIconPath(marker.feature.properties.type_captage),
+            iconSize: [15, 15],
+            // iconAnchor: [0, 0],
+            popupAnchor: [0, 0]
+        });
+        marker.setIcon(icon);
+    }
+
     // Survol captage
-    function highlightMarker(e) {
-        var marker = e.target;
+    function highlightMarker(marker) {
         const icon = new L.Icon({
             iconUrl: getIconPath(marker.feature.properties.type_captage),
 		    iconSize: [30, 30],
@@ -448,20 +460,47 @@ $(document).ready(function () {
     }
 
     function resetHighlightMarker(e) {
-        var marker = e.target;
+        var idCaptageWeb =  e.target.feature.properties.id_captage_web;
+        if (idCaptageWeb === selectedIdCaptageWeb) {
+        // si c'est le captage sélectionné
+            highlightSelectedMarker(e.target);
+        } else {
+            defaultMarker(e.target);
+        }
+    }
+
+    // Réinitialise le style de l'entité sélectionnée 
+    function resetHighlightSelectedMarker (){
+        if (!!selectedIdCaptageWeb){
+        // si une démarche est sélectionnée
+            captages.eachLayer(function (layer) {
+                // Si le captage est sélectionné
+                // console.log(layer.feature.properties.id_captage_web);
+                if (layer.feature.properties.id_captage_web === selectedIdCaptageWeb) {
+                    defaultMarker(layer); // style par défaut
+                    
+                }
+            });
+            selectedIdCaptageWeb = null; 
+        }
+    }
+
+    // Mise en forme du captage sélectionné
+    function highlightSelectedMarker(marker) {
         const icon = new L.Icon({
-            iconUrl: getIconPath(marker.feature.properties.type_captage),
-		    iconSize: [15, 15],
-            // iconAnchor: [0, 0],
+            iconUrl: 'assets/images/goutte_o.png',
+		    iconSize: [30, 30],
+            iconAnchor: [15, 15], // permet de garder l'icone centré
             popupAnchor: [0, 0]
-        });
+         });
         marker.setIcon(icon);
+        selectedIdCaptageWeb = marker.feature.properties.id_captage_web;
     }
 
     // Fonction de zoom lors du click sur un captage
-    function clickZoom(e) {
+    function clickZoom(marker) {
         //map.setView(e.target.getLatLng(), 13);
-        map.flyTo(e.target.getLatLng(), 10, {
+        map.flyTo(marker.getLatLng(), 10, {
             duration: 0.5,  // Durée du vol en secondes
             maxZoom: 10     // Niveau de zoom maximal
         });
@@ -536,7 +575,6 @@ $(document).ready(function () {
         captageInfo.id = idCaptageWeb ; // id du conteneur captage-info est id_captage_web
         fieldset_captages.appendChild(captageInfo);
         // Dépliement des infos du captage
-        console.log('captage_title_'+ idCaptageWeb);
         document.getElementById('captage_title_' + idCaptageWeb).addEventListener('click', function(event) {
             event.stopPropagation();
             toggleCaptageDetails(captageInfo);
@@ -544,7 +582,6 @@ $(document).ready(function () {
         // Dépliement de la partie plus d'informations
         moreInfoAction ('captage_more_info_button_'+ idCaptageWeb, 'captage_more_info_'+ idCaptageWeb) 
     }
-
 
     // Complète les infos de tous les captages d'une démarche
     function fillAllCaptagesInfo(idDemarcheWeb) {
@@ -558,15 +595,31 @@ $(document).ready(function () {
         });
     }
 
+    // Selectionne et met en forme le captage à partir de son id_captage_web
+    function selectCaptagesFromIdCaptageWeb (idCaptageWeb) {
+        // Pour l'ensemble des captages
+        captages.eachLayer(function (layer) {
+            if (layer.feature.properties.id_captage_web === idCaptageWeb) {
+                // On sélectionne le captage
+                highlightSelectedMarker(layer);
+                clickZoom(layer);
+            }
+        });
+    }
+
     // Changer le style du captage sélectionné
     function toggleCaptageDetails(element) {
+        // partie popup
         var allCaptages = document.querySelectorAll('.captage-info');
         allCaptages.forEach(function(captage) {
             if (captage !== element) {
                 captage.classList.remove('expanded');
             }
         });
-        element.classList.toggle('expanded');
+        element.classList.toggle('expanded'); // on déplie la partie du captage sélectionné
+        // partie visuelle
+        resetHighlightSelectedMarker();
+        selectCaptagesFromIdCaptageWeb(element.id);
     }
 
     // Déplie le popup du captage sélectionné
@@ -593,17 +646,21 @@ $(document).ready(function () {
         }
         openPopupSelectedCaptage(idCaptageWeb); // déplie le popup du captage sélectionné
     }
-
     
     function onEachFeature_captage(feature, layer){
         // layer.bindPopup(popup_content(feature,'Établissement de tourisme et de loisir','camping',false)
         // );
         layer.on({
-            mouseover : highlightMarker,
+            mouseover : function(e) {
+                highlightMarker(e.target);
+            },
             mouseout : resetHighlightMarker,
             click: function (e) {
-                clickZoom(e);
+                clickZoom(e.target);
+                resetHighlightSelectedFeature(); // désélectionne la démarche
+                resetHighlightSelectedMarker(); // désélectionne le captage
                 showPopupCaptage(feature);
+                highlightSelectedMarker(e.target); // sélectionne le captage
             }
           });
     }
