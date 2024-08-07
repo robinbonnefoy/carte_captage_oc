@@ -2,12 +2,19 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------------------------------------------
     ///// Constantes et variables globales
 
-    const panelWidth = "300px"; // largeur du panneau latéral de droite
+    const mapContainer = document.getElementById("map"); // conteneur de la carte Leaflet
+
+    const rightPanel = document.getElementById("panel-right"); // panneau latéral de droite
+    const rightPanelWidth = "300px";
+    const openButtons = document.querySelectorAll('.openbtn-right'); // bouton latéraux de droite (démarche et captages)
     const fieldset_captages = document.getElementById('onglet_captages'); // id du fieldset de l'onglet Captages du panneau latéral de droite
     const fieldset_demarches = document.getElementById('onglet_demarches'); // id du fieldset de l'onglet Démarches du panneau latéral de droite
     var selectedIdDemarcheWeb = null ; // id_demarche_web de la Démarche sélectionnée
     var selectedIdCaptageWeb = null ; // id_captage_web du captage sélectionnée
-    
+
+    const leftPanel = document.getElementById("panel-left");
+    const leftPanelWidth = "300px";
+    const openLeftButtons = document.querySelectorAll('.openbtn-left'); 
     // ------------------------------------------------------------------------------------------------------------
     ///// Méthodes
 
@@ -20,15 +27,23 @@ $(document).ready(function () {
         }, 3000);               
 	};
 
+    function closePanel (panel,widthPanel,fctToggle) {
+        const isOpen = panel.style.width === widthPanel;
+        if(isOpen){
+            fctToggle();
+        }
+    }
+
     /// Carte
 
-    // Zoom sur l'entité polygonale sélectionnée
-	function zoomToFeature(layer) {
-        map.fitBounds(layer.getBounds(),{maxZoom : 12});
-        map.panBy([-300 / 2, 0], { animate: false }); // Décale la carte vers la gauche pour compenser le paneau latéral
-    };
+    // Ajuster la taille de la carte après une transition
+    function adjustMapSize() {
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 600); // Ajuster en fonction de la durée de la transition
+    }
 
-    /// Panneau latéral
+    /// Panneau latéral droite
 
     // Récupère le nom de domaine d'une url
     function extractDomainFromUrl (url) {
@@ -37,24 +52,26 @@ $(document).ready(function () {
 
     // Vérifie si le pannneau latéral est ouvert, et l'ouvre si nécessaire
     function openPanel (){
-        const panel = document.getElementById("panel");
-        const isOpen = panel.style.width === panelWidth;
+        const isOpen = rightPanel.style.width === rightPanelWidth;
         if (!isOpen) {
-            togglePanel('open');
+            toggleRightPanel();
         } 
     }
 
     // Fonction pour ouvrir/fermer le panneau
-    function togglePanel(action) {
-        const panel = document.getElementById("panel");
-        const mapContainer = document.getElementById("map");
-        const openButtons = document.querySelectorAll('.openbtn');
-        // const isOpen = panel.style.width === panelWidth;
-        if (action === 'close') {
+    function toggleRightPanel() {
+        if (rightPanel.style.width === '0px' || rightPanel.style.width === '') {
+            // Ouvrir le panneau droit
+            mapContainer.style.width = "calc(100% - " + rightPanelWidth + ")";
+            rightPanel.style.width = rightPanelWidth;
+            // Occulter les deux boutons
+            openButtons.forEach(button => {
+                button.style.display = 'none';
+            });
+        } else {
             // Fermer le panneau
-            panel.style.width = "0";
+            rightPanel.style.width = '0';
             mapContainer.style.width = "100%";
-            document.querySelector('.openbtn').innerHTML = '<img src="assets/images/demarche.png" alt="Infos Démarches" class="logo_lateral">';
             // Afficher les deux boutons
             openButtons.forEach(button => {
                 button.style.display = 'block';
@@ -65,15 +82,8 @@ $(document).ready(function () {
             // Réinitialiser les popups
             defautPopupDemarche();
             defaultPopupCaptage();
-        } else {
-            // Ouvrir le panneau
-            panel.style.width = panelWidth;
-            mapContainer.style.width = "calc(100% - " + panelWidth + ")";
-            // Occulter les deux boutons
-            openButtons.forEach(button => {
-                button.style.display = 'none';
-            });
         }
+        // adjustMapSize();
     }
 
     // Navigation entre les onglets
@@ -95,17 +105,19 @@ $(document).ready(function () {
 
     // Paramétrage des deux boutons latéraux
     document.getElementById('bt_demarches').addEventListener("click", () => {
-        togglePanel('open');
+        closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
+        toggleRightPanel();
         afficherOnglet('onglet_demarches');
     });
     document.getElementById('bt_captages').addEventListener("click", () => {
-        togglePanel('open');
+        closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
+        toggleRightPanel();
         afficherOnglet('onglet_captages');
     });
 
-    // Paramétrage du bouton pour fermer le panneau
-    document.getElementById('bt_fermer').addEventListener("click", () => {
-        togglePanel('close');
+    // Paramétrage du bouton pour fermer le panneau de droite
+    document.getElementById('bt_fermer-right').addEventListener("click", () => {
+        toggleRightPanel();
     });
 
     // Paramétrage des bouton Onglets
@@ -135,6 +147,38 @@ $(document).ready(function () {
           return 'N/A';
         }
     }
+
+    /// Panneau latéral de gauche
+
+    // Fonction pour ouvrir/fermer le panneau gauche
+    function toggleLeftPanel() {
+        if (leftPanel.style.width === '0px' || leftPanel.style.width === '') {
+            // Ouvrir le panneau gauche
+            leftPanel.style.width = leftPanelWidth;
+            mapContainer.style.width = "calc(100% - " + leftPanelWidth + ")";
+            mapContainer.style.marginLeft = leftPanelWidth;
+        } else {
+            // Fermer le panneau gauche
+            leftPanel.style.width = '0';
+            mapContainer.style.marginLeft = '0';
+            mapContainer.style.width = "100%";
+        }
+        // adjustMapSize();
+    }
+
+    // Paramétrage des deux boutons latéraux
+    openLeftButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            toggleLeftPanel('open');
+            closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
+        });
+    });
+
+    // Paramétrage du bouton pour fermer le panneau de droite
+    document.getElementById('bt_fermer-left').addEventListener("click", () => {
+        toggleLeftPanel();
+    });
+    
 
     // ------------------------------------------------------------------------------------------------------------
     ///// Création de l'objet carte 
@@ -201,6 +245,12 @@ $(document).ready(function () {
     ///// Couche Démarches (EPSG:4326)
 
     /// Interactions sur les démarches (onEachFeature)
+
+    // Zoom sur l'entité polygonale sélectionnée
+	function zoomToFeature(layer) {
+        map.fitBounds(layer.getBounds(),{maxZoom : 12});
+        map.panBy([-300 / 2, 0], { animate: false }); // Décale la carte vers la gauche pour compenser le paneau latéral
+    };
 
     // Action lors du survol avec la souris d'une entité polygonale
 	function highlightFeature(e) {

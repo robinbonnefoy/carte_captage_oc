@@ -62,10 +62,9 @@ html, body {
 }
 
 #map {
+    width: 100%;
     height: 100vh;
-    width: calc(100% - 0px); /* Initialement, panneau de largeur 0 */
-    transition: width 0.5s;
-    float: left;
+    /* transition: width 0.5s; */
 }
 
 
@@ -80,6 +79,19 @@ html, body {
     opacity: 0.8;
 }
 
+/* -- Deux boutons panneaux fermés */
+.openbtn {
+    background-color: white;
+    border-color: #007c8e;
+    padding: 5px;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    transition: 0.3s;
+}
+
+
 
 /* ----- PANNEAU LATERAL DROIT ----- */
 
@@ -90,7 +102,6 @@ html, body {
     position: fixed;
     top: 0;
     right: 0;
-    background-color: white;
     overflow-x: hidden;
     transition: 0.5s;
     padding: 0;
@@ -105,17 +116,9 @@ html, body {
     padding-top: 5px;
 }
 
-/* -- Deux boutons panneau fermé et bouton panneau ouvert -- */
-.openbtn {
-    background-color: white;
-    border-color: #007c8e;
-    /* border : none; */
-    padding: 5px;
+/* -- Boutons fermés -- */
+.openbtn-right {
     border-radius: 12px 0 0 12px;
-    cursor: pointer;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
     border-right: none; /* Supprimer la bordure à droite */
 }
 
@@ -132,18 +135,14 @@ html, body {
     position: fixed;
 }
 
+#bt_demarches:hover, #bt_captages:hover {
+    padding-right: 20px;
+}
+
 /* Logo dans bouton */
 .logo_lateral{
     height : 50px;
     width : 50px;
-}
-
-#bt_fermer {
-    background-color: transparent;
-    color: white;
-    margin-left : 5px;
-    border: 2px solid white;
-    border-radius : 2px;
 }
 
 /* --- POPUP--- */
@@ -485,3 +484,68 @@ a.captage_link:hover {
 a.captage_link:active {
     color: #3f2203; /* Couleur du texte au survol */
 }
+
+/* ----- PANNEAU LATERAL GAUCHE ----- */
+
+/* Boutons pour ouvrir/fermer le panneau */
+/* -- Boutons fermés -- */
+.openbtn-left {
+    border-radius: 0 12px 12px 0;
+    border-left: none; /* Supprimer la bordure à droite */
+}
+
+#bt_recherche {
+    bottom: 90px;
+    left: 0px;
+    position: fixed;
+}
+
+#bt_legende{
+    bottom: 20px;
+    left: 0px;
+    position: fixed;
+}
+
+#bt_recherche:hover, #bt_legende:hover {
+    padding-left: 20px;
+}
+
+/* Panneau rabattable */
+#panel-left, #panel-right {
+    position: fixed;
+    top: 0;
+    height: 100%;
+    width: 0;
+    overflow-x: hidden;
+    /* transition: 0.5s; */
+    z-index: 1000;
+    padding: 0;
+    padding-top: 5px;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+}
+#panel-left {
+    left: 0;
+    background: #fff;
+}
+#panel-right{
+    right: 0;
+    background: #007c8e;
+}
+
+.bt_fermer {
+    border: 2px solid white;
+    border-radius : 2px;
+}
+
+#bt_fermer-right {
+    margin-left : 5px;
+    background-color: transparent;
+    color: white;
+}
+
+#bt_fermer-left {
+    margin-right : 5px;
+    background-color: transparent;
+    color: #007c8e;
+}
+

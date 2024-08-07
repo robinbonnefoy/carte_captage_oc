@@ -34,14 +34,13 @@
         <img id="logo" src="assets/images/logo_captage.png" alt="Logo Captages d'EAUccitanie">
     </div>
     <div id="map"></div>
-    <button id="bt_demarches" class="openbtn"><img src="assets/images/demarche.png" alt="Infos Démarche(s)" class="logo_lateral"></button>
-    <button id="bt_captages" class="openbtn"><img src="assets/images/goutte_menu.png" alt="Infos Captage(s)" class="logo_lateral"></button>
-    <div id="panel">
-
-        <button id="bt_fermer"> > </button>
+    <!-- Panneau latéral droit (Démarches / captages)-->
+    <button id="bt_demarches" class="openbtn openbtn-right"><img src="assets/images/demarche.png" alt="Infos Démarche(s)" class="logo_lateral"></button>
+    <button id="bt_captages" class="openbtn openbtn-right"><img src="assets/images/goutte_menu.png" alt="Infos Captage(s)" class="logo_lateral"></button>
+    <div id="panel-right">
+        <button class="bt_fermer" id="bt_fermer-right"> > </button>
         <div id="panel-content">
-
-            <!-- En-tête Onglets -->
+            <!-- En-tête -->
             <div id="onglets" class="onglet"> 
                 <button type="button" id="bt_onglet_demarches" data-onglet="onglet_demarches" class="bt_onglet">
                     <img src="assets/images/demarche.png" class="image_onglet" alt="Logo démarche">
@@ -52,8 +51,7 @@
                     <span class="titre_onglet"> Captage(s) associé(s) </span>
                 </button>
             </div>
-
-            <!-- Contenu Onglets -->
+            <!-- Contenu -->
             <fieldset id="onglet_demarches">
                 <div class="no_demarche"> 
                     Aucune demarche / AAC sélectionnée
@@ -66,6 +64,12 @@
                 </div>
             </fieldset>
         </div>
+    </div>
+    <!-- Panneau latéral Gauche (Recherche / Légende)-->
+    <button id="bt_recherche" class="openbtn openbtn-left"><img src="assets/images/loupe.png" alt="Rechercher" class="logo_lateral"></button>
+    <button id="bt_legende" class="openbtn openbtn-left"><img src="assets/images/oeil_grand.png" alt="Légende" class="logo_lateral"></button>
+    <div id="panel-left">
+        <button class="bt_fermer" id="bt_fermer-left"> < </button>
     </div>
 
     <script src="app.js"></script>
