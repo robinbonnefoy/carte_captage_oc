@@ -23,8 +23,8 @@ $(document).ready(function () {
     /// Carte
 
     // Zoom sur l'entité polygonale sélectionnée
-	function zoomToFeature(e) {
-        map.fitBounds(e.target.getBounds(),{maxZoom : 12});
+	function zoomToFeature(layer) {
+        map.fitBounds(layer.getBounds(),{maxZoom : 12});
         map.panBy([-300 / 2, 0], { animate: false }); // Décale la carte vers la gauche pour compenser le paneau latéral
     };
 
@@ -126,6 +126,16 @@ $(document).ready(function () {
         });
     }
 
+    // Vérifie l'URL
+    function isValidUrl(string) {
+        try {
+          new URL(string);
+          return `<a href="${properties.lien}"  target="_blank" class="captage_link"> ${extractDomainFromUrl(properties.lien)}</a>`;
+        } catch (err) {
+          return 'N/A';
+        }
+    }
+
     // ------------------------------------------------------------------------------------------------------------
     ///// Création de l'objet carte 
         
@@ -221,9 +231,9 @@ $(document).ready(function () {
         selectedIdDemarcheWeb = layer.feature.properties.id_demarche_web ;
         layer.setStyle({
             weight: 5,
-            color: '#e17a0c',
+            color: '#F868CB',
             dashArray: '',
-            fillColor : '#e17a0c',
+            fillColor : '#F868CB',
             // fillOpacity: 0.7
         });
         // Assurez-vous de ramener en avant uniquement sur le clic
@@ -244,6 +254,76 @@ $(document).ready(function () {
             });
             selectedIdDemarcheWeb = null; 
         }
+    }
+
+    /// Démarches associées
+
+    // Récupère le nom de la démarche associée
+    function getNomDemarcheAssociee (idDemarcheWeb){
+        var nomDemarche ;
+        demarches.eachLayer(function (layer) {
+            // Si la démarche est associée au captage
+            if (layer.feature.properties.id_demarche_web === idDemarcheWeb) {
+                console.log(layer.feature.properties.nom);
+                nomDemarche =  layer.feature.properties.nom;
+            }
+        });
+        return nomDemarche;
+    }
+
+    // Ouvre la démarche associée
+    function openDemarcheAssociee(idDemarcheWeb){
+        demarches.eachLayer(function (layer) {
+            // Si la démarche est associée au captage
+            if (layer.feature.properties.id_demarche_web === idDemarcheWeb) {
+                resetHighlightSelectedMarker(); // désélectionne le captage
+                resetHighlightSelectedFeature(); // réinitialisation du style d'une démarche sélectionnée
+                highlightSelectedFeature(layer); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
+                zoomToFeature(layer);
+                showDemarcheInfo(layer.feature);
+                reinitializeCaptage(); // Réinitialiser les infos de la partie "Captages associé(s)"
+                fillAllCaptagesInfo(layer.feature.properties.id_demarche_web); // Complète les infos de la partie "Captages associé(s)"
+            }
+        });
+    }
+
+    function demarchesAssocieesPopupClick (str){
+        // Si il y a une / des démarches associées
+        if (str.substring(0,4) === 'DEM_'){
+            // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
+            var ids = str.split(", ");
+            // Parcourir chaque ID dans le tableau avec une boucle for
+            for (var i = 0; i < ids.length; i++) {
+                // Isoler chaque ID
+                var id = ids[i];
+                var idContainer= 'ASSOC_' + id;
+                // Paramétrage des bouton Onglets
+                document.getElementById(idContainer).addEventListener("click", () => {
+                    openDemarcheAssociee(id);
+                });
+
+            }
+        }
+    }
+
+    // Ajoute une partie dans le popup Démarche sur les démarches associées
+    function demarchesAssocieesPopup(str){
+        var insert = '';
+        // Si il y a une / des démarches associées
+        if (str.substring(0,4) === 'DEM_'){
+            insert += `<span class="popup_demarche_titre_champs2"> Démarche(s) associée(s)  </span>`;
+            // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
+            var ids = str.split(", ");
+            // Parcourir chaque ID dans le tableau avec une boucle for
+            for (var i = 0; i < ids.length; i++) {
+                // Isoler chaque ID
+                var id = ids[i];
+                insert += `
+                    <span class="demarche_associee" id="ASSOC_${id}"> ${getNomDemarcheAssociee(id)} </span>
+                `;
+            }
+        }
+        return insert;
     }
 
     // Remplir les infos de la démarche de la Partie "Démarche territoriale"
@@ -283,13 +363,16 @@ $(document).ready(function () {
                 <div class="more_info_button" id="more_info_button2">Aller plus loin</div>
                 <div class="more_info_content">
                     <span class="popup_demarche_titre_champs2"> Rendez-vous sur  </span>
-                    <span class="popup_info2"> <a href="${feature.properties.lien}"  target="_blank" class="demarche_link"> ${extractDomainFromUrl(feature.properties.lien)}</a> </span>
+                    <span class="popup_info2"> ${isValidUrl(feature.properties.lien)} </span>
+                    ${demarchesAssocieesPopup(feature.properties.id_demarche_web_associe)}
                 </div>
             </div>
         `;
         // Paramétrage du popup (sections rabatues)
         moreInfoAction('more_info_button','more_info');
         moreInfoAction('more_info_button2','more_info2');
+        // Paramétrage bouton démarche associée
+        demarchesAssocieesPopupClick(feature.properties.id_demarche_web_associe);
     }
 
     // Remplir la démarche à partir de l'id_demarche_web
@@ -348,7 +431,7 @@ $(document).ready(function () {
                 resetHighlightSelectedMarker(); // désélectionne le captage
                 resetHighlightSelectedFeature(); // réinitialisation du style d'une démarche sélectionnée
                 highlightSelectedFeature(e.target); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
-                zoomToFeature(e);
+                zoomToFeature(e.target);
                 showDemarcheInfo(feature);
                 reinitializeCaptage(); // Réinitialiser les infos de la partie "Captages associé(s)"
                 fillAllCaptagesInfo(feature.properties.id_demarche_web); // Complète les infos de la partie "Captages associé(s)"
@@ -401,21 +484,21 @@ $(document).ready(function () {
     ///// AAC (EPSG:4326)
     // Toutes les AAC qui n'ont pas de démarches associées directement
 
-    const aac = L.geoJSON(null,{
-        style : {
-            color:'rgb(87,107,53)',
-            weight:2,
-            fillColor: 'rgb(87,107,53)',
-            fillOpacity: 0.5
-        },
-        interactive: false // couche non cliquable
-    });
-    $.getJSON('data/aac_oc.geojson', function(data){
-        aac.addData(data).addTo(map);
-    });
+    // const aac = L.geoJSON(null,{
+    //     style : {
+    //         color:'rgb(87,107,53)',
+    //         weight:2,
+    //         fillColor: 'rgb(87,107,53)',
+    //         fillOpacity: 0.5
+    //     },
+    //     interactive: false // couche non cliquable
+    // });
+    // $.getJSON('data/aac_oc.geojson', function(data){
+    //     aac.addData(data).addTo(map);
+    // });
 
 
-    aac.bringToFront();
+    // aac.bringToFront();
 
     // --------------------------------------------------------------------------------------------------------------
     ///// Captages (EPSG:4326)
@@ -488,7 +571,7 @@ $(document).ready(function () {
     // Mise en forme du captage sélectionné
     function highlightSelectedMarker(marker) {
         const icon = new L.Icon({
-            iconUrl: 'assets/images/goutte_o.png',
+            iconUrl: 'assets/images/goutte_r.png',
 		    iconSize: [30, 30],
             iconAnchor: [15, 15], // permet de garder l'icone centré
             popupAnchor: [0, 0]
@@ -546,7 +629,7 @@ $(document).ready(function () {
                         Plus d'informations
                     </div>
                     <div class="captage_more_info_content">
-                        <span class="captage_more_info_champ"> Code ouvrage </span>
+                        <span class="captage_more_info_champ"> Codes des points de prélèvements associés (BSS) </span>
                         <span class="captage_champ_info"> ${properties.code_points_prelevements} </span>
                         <span class="captage_more_info_champ"> Population alimentée par l'ouvrage </span>
                         <span class="captage_champ_info"> ${properties.population_alimentee} </span>
@@ -559,7 +642,7 @@ $(document).ready(function () {
                         <span class="captage_more_info_champ"> Arrêté de dérogation aux limites de qualité de l'eau du robinet </span>
                         <span class="captage_champ_info"> ${properties.arretes_zsce} </span>
                         <span class="captage_more_info_champ" style="color:#e17a0c;"> Rendez-vous sur  </span>
-                        <span class="captage_champ_info"> <a href="${properties.lien}"  target="_blank" class="captage_link"> ${extractDomainFromUrl(properties.lien)}</a> </span>
+                        <span class="captage_champ_info"> ${isValidUrl(properties.lien)} </span>
                     </div>
                 </div>
             </div>

@@ -341,6 +341,17 @@ a.demarche_link:active {
     color: #3f2203; /* Couleur du texte au survol */
 }
 
+.demarche_associee{
+    color: white;
+    display: block;
+    padding : 0 3px 0 3px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s; /* Transitions pour le survol */
+}
+.demarche_associee:hover {
+    color: #3f2203; /* Couleur du texte au survol */
+}
+
 /* Popup Captage */
 
 .captage-info {
