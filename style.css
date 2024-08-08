@@ -535,6 +535,7 @@ a.captage_link:active {
 .bt_fermer {
     border: 2px solid white;
     border-radius : 2px;
+    cursor: pointer;
 }
 
 #bt_fermer-right {
@@ -547,5 +548,69 @@ a.captage_link:active {
     margin-right : 5px;
     background-color: transparent;
     color: #007c8e;
+    border: 1px solid #007c8e;
+}
+
+.btContainer-left{
+    display: flex;
+    align-items: center;
+    justify-content: right;
+}
+
+
+/* -- Barre de recherche --  */
+
+.search-container{
+    font-family: 'SourceSansPro', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 5px;
+    padding: 5px;
+    width : calc(100% - 10px) ;
+}
+
+#searchInput{
+    display: block;
+    text-align: center;
+    padding: 5px 30px;
+    width : 100%;
+    box-sizing: border-box; /* prise en compte du padding et de la marge pour la largeur totale */
+}
+
+.clear-button {
+    position: absolute;
+    right: 15px; /* Positionne la croix à droite */
+    top: 37px; /* Centrage vertical */
+    cursor: pointer;
+    font-size: 18px;
+    color: #007c8e; /* Couleur de la croix */
+    display: none; /* Caché par défaut */
+}
+
+.search-loupe{
+    position: absolute;
+    left: 10px; /* Positionne la croix à droite */
+    top: 37px; /* Centrage vertical */
+    width: 25px;
+}
+
+/* Affiche la croix lorsque le champ de recherche n'est pas vide */
+#searchInput:not(:placeholder-shown) ~ #clearSearch {
+    display: inline; 
+}
+
+#results{
+    font-size: 0.85rem;
+}
+
+#results div {
+    display: block;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+#results div:hover {
+    background-color: #f0f0f0;
 }
 

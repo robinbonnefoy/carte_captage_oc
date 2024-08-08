@@ -69,7 +69,15 @@
     <button id="bt_recherche" class="openbtn openbtn-left"><img src="assets/images/loupe.png" alt="Rechercher" class="logo_lateral"></button>
     <button id="bt_legende" class="openbtn openbtn-left"><img src="assets/images/oeil_grand.png" alt="Légende" class="logo_lateral"></button>
     <div id="panel-left">
-        <button class="bt_fermer" id="bt_fermer-left"> < </button>
+        <!-- Bouton Fermer le panneau  -->
+        <span class="btContainer-left"><button class="bt_fermer" id="bt_fermer-left"> < </button></span>
+        <!-- Barre de recherche -->
+        <div class="search-container">
+            <img src="assets/images/loupe.png" alt="Rechercher" class="search-loupe">
+            <input type="text" id="searchInput" placeholder="Rechercher...">
+            <span id="clearSearch" class="clear-button">&times;</span>        
+            <div id="results"></div>
+        </div>
     </div>
 
     <script src="app.js"></script>

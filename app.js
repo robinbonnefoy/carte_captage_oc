@@ -461,30 +461,31 @@ $(document).ready(function () {
 
     // Afficher les infos de la démarche lors du clic
     function showDemarcheInfo(feature) {
+        closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         openPanel(); // Ouvre le panneau latéral si nécessaire
         afficherOnglet('onglet_demarches'); // ouvrir l'onglet Dméraches du panneau
         fillDemarcheInfo(feature);
     }
-    
 
+    // Au clic sur une démarche
+    function handleDemarcheClick(layer){
+        resetHighlightSelectedMarker(); // désélectionne le captage
+        resetHighlightSelectedFeature(); // réinitialisation du style d'une démarche sélectionnée
+        highlightSelectedFeature(layer); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
+        zoomToFeature(layer);
+        showDemarcheInfo(layer.feature);
+        reinitializeCaptage(); // Réinitialiser les infos de la partie "Captages associé(s)"
+        fillAllCaptagesInfo(layer.feature.properties.id_demarche_web); // Complète les infos de la partie "Captages associé(s)"
+    }
+    
     // Appliqué à chaque démarche
 	function onEachFeature_demarches(feature, layer) {
 
-        //layer._leaflet_id = feature.properties.nom; // on désigne le nom de la commune comme l'identifiant de l'entité
-    
-        // layer.bindPopup(popup_content(feature,'Commune','commune',true));
-    
         layer.on({
             mouseover: highlightFeature,
             mouseout: resetHighlight,
             click: function (e) {
-                resetHighlightSelectedMarker(); // désélectionne le captage
-                resetHighlightSelectedFeature(); // réinitialisation du style d'une démarche sélectionnée
-                highlightSelectedFeature(e.target); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
-                zoomToFeature(e.target);
-                showDemarcheInfo(feature);
-                reinitializeCaptage(); // Réinitialiser les infos de la partie "Captages associé(s)"
-                fillAllCaptagesInfo(feature.properties.id_demarche_web); // Complète les infos de la partie "Captages associé(s)"
+                handleDemarcheClick(e.target); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
             }
         });
     };
@@ -658,7 +659,7 @@ $(document).ready(function () {
         var properties = feature.properties;
         return (`
             <div class="captage-title" id="captage_title_${properties.id_captage_web}"> 
-                <span class="captage-title-text"> ${properties.nom_ouvrage} </span>
+                <span class="captage-title-text"> ${properties.nom} </span>
                 <span class="toggle-icon"></span>
             </div>
             <div class="captage-details">
@@ -765,6 +766,7 @@ $(document).ready(function () {
     function showPopupCaptage(feature){
         var idDemarcheWeb = feature.properties.id_demarche_web;
         var idCaptageWeb = feature.properties.id_captage_web;
+        closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         openPanel(); // Ouvre le panneau latéral si nécessaire
         afficherOnglet('onglet_captages'); // ouvrir l'onglet Dméraches du panneau
         reinitializeCaptage(); // Réinitaliser le contenu du fieldset captage
@@ -779,6 +781,15 @@ $(document).ready(function () {
         }
         openPopupSelectedCaptage(idCaptageWeb); // déplie le popup du captage sélectionné
     }
+
+    // Au clic sur un captage
+    function handleCaptageClick (layer) {
+        clickZoom(layer);
+        resetHighlightSelectedFeature(); // désélectionne la démarche
+        resetHighlightSelectedMarker(); // désélectionne le captage
+        showPopupCaptage(layer.feature);
+        highlightSelectedMarker(layer); // sélectionne le captage
+    }
     
     function onEachFeature_captage(feature, layer){
         // layer.bindPopup(popup_content(feature,'Établissement de tourisme et de loisir','camping',false)
@@ -789,11 +800,7 @@ $(document).ready(function () {
             },
             mouseout : resetHighlightMarker,
             click: function (e) {
-                clickZoom(e.target);
-                resetHighlightSelectedFeature(); // désélectionne la démarche
-                resetHighlightSelectedMarker(); // désélectionne le captage
-                showPopupCaptage(feature);
-                highlightSelectedMarker(e.target); // sélectionne le captage
+                handleCaptageClick(e.target);
             }
           });
     }
@@ -853,6 +860,81 @@ $(document).ready(function () {
 
     // Mise à jour de la visibilité de la carte lors du zoom / dézoom
     map.on('zoomend', updateGeoJSONLayerVisibility);
+
+    // --------------------------------------------------------------------------------------------------------------
+    ///// BARRE DE RECHERCHE
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+        var query = this.value.toLowerCase();
+        var resultsDiv = document.getElementById('results');
+
+        var results = [];
+
+        // Réinitialiser les suggestions si le champ est vide
+        if (query === '') {
+            resultsDiv.innerHTML = ''; // Efface les suggestions
+            return;
+        }
+    
+        // Fonction pour rechercher dans une couche GeoJSON
+        function searchInLayer(layer, layerType) {
+            layer.eachLayer(function(featureLayer) {
+                var properties = featureLayer.feature.properties;
+                for (var key in properties) {
+                    if (properties[key].toString().toLowerCase().indexOf(query) !== -1) {
+                        results.push({
+                            layer: featureLayer,
+                            type: layerType
+                        });
+                        break;
+                    }
+                }
+            });
+        }
+        
+        // Recherche dans les deux couches avec indication du type
+        searchInLayer(demarches, 'demarche');
+        searchInLayer(captages, 'captage');
+
+        // Trier les résultats par ordre alphabétique en fonction du champ 'nom'
+        results.sort(function(a, b) {
+            return a.layer.feature.properties.nom.toLowerCase().localeCompare(b.layer.feature.properties.nom.toLowerCase());
+        });
+            
+        // Limiter le nombre de résultats à 10
+        results = results.slice(0, 10);
+    
+        // Afficher les résultats
+        resultsDiv.innerHTML = '';
+    
+        results.forEach(function(result) {
+            var listItem = document.createElement('div');
+            listItem.innerHTML = result.layer.feature.properties.nom;  // Modifier en fonction de ce que vous voulez afficher
+            listItem.style.cursor = 'pointer';
+            
+            // Appliquer une fonction différente selon le type
+            listItem.addEventListener('click', function() {
+                if (result.type === 'demarche') {
+                    handleDemarcheClick(result.layer);
+                } else if (result.type === 'captage') {
+                    handleCaptageClick(result.layer);
+                }
+            });
+            resultsDiv.appendChild(listItem);
+        });
+
+        console.log(results);
+    });
+
+    // Fonction pour gérer le clic sur la croix
+    document.getElementById('clearSearch').addEventListener('click', function() {
+        var searchInput = document.getElementById('searchInput');
+        searchInput.value = ''; // Vide le champ de recherche
+        document.getElementById('results').innerHTML = ''; // Efface les suggestions
+        searchInput.focus(); // Redonne le focus au champ de recherche
+    });
+    
+   
 
     // --------------------------------------------------------------------------------------------------------------
 
