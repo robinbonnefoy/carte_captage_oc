@@ -361,7 +361,7 @@ $(document).ready(function () {
         var insert = '';
         // Si il y a une / des démarches associées
         if (str.substring(0,4) === 'DEM_'){
-            insert += `<span class="popup_demarche_titre_champs2"> Démarche(s) associée(s)  </span>`;
+            insert += `<span class="popup_demarche_partie"> Démarche(s) associée(s)  </span>`;
             // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
             var ids = str.split(", ");
             // Parcourir chaque ID dans le tableau avec une boucle for
@@ -390,6 +390,7 @@ $(document).ready(function () {
             <span class="popup_info"> ${feature.properties.animateur} </span>
             <span class="popup_info"> ${feature.properties.mail} </span>
             <span class="popup_info"> ${feature.properties.telephone} </span>
+            ${demarchesAssocieesPopup(feature.properties.id_demarche_web_associe)}
             <div class="more_info" id="more_info">
                 <div class="more_info_button" id="more_info_button">Plus d'informations</div>
                 <div class="more_info_content">
@@ -414,7 +415,6 @@ $(document).ready(function () {
                 <div class="more_info_content">
                     <span class="popup_demarche_titre_champs2"> Rendez-vous sur  </span>
                     <span class="popup_info2"> ${isValidUrl(feature.properties.lien)} </span>
-                    ${demarchesAssocieesPopup(feature.properties.id_demarche_web_associe)}
                 </div>
             </div>
         `;
@@ -502,7 +502,7 @@ $(document).ready(function () {
                 fillOpacity: 0.5,
             }
         // AAC ou PAT 
-        } else if ((feature.properties.type_web === 'AAC')) {
+        } else {
             style = {
                 color:'rgb(87,107,53)',
                 weight:2,
@@ -532,21 +532,22 @@ $(document).ready(function () {
     });
 
     // --------------------------------------------------------------------------------------------------------------
-    ///// AAC (EPSG:4326)
-    // Toutes les AAC qui n'ont pas de démarches associées directement
+    ///// ZPAAC (EPSG:4326)
+    // ZP des AAC du bassin RMC
 
-    // const aac = L.geoJSON(null,{
-    //     style : {
-    //         color:'rgb(87,107,53)',
-    //         weight:2,
-    //         fillColor: 'rgb(87,107,53)',
-    //         fillOpacity: 0.5
-    //     },
-    //     interactive: false // couche non cliquable
-    // });
-    // $.getJSON('data/aac_oc.geojson', function(data){
-    //     aac.addData(data).addTo(map);
-    // });
+    const zp = L.geoJSON(null,{
+        style : {
+            color:'rgb(144,187,70)',
+            weight:2,
+            fillOpacity: 0,
+        },
+        interactive: false // couche non cliquable
+    });
+    $.getJSON('data/zpaac.geojson', function(data){
+        zp.addData(data).addTo(map);
+    });
+
+    zp.bringToFront();
 
 
     // aac.bringToFront();

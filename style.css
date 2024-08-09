@@ -341,14 +341,14 @@ a.demarche_link:active {
 }
 
 .demarche_associee{
-    color: white;
+    color: #00728e;
     display: block;
     padding : 0 3px 0 3px;
     cursor: pointer;
     transition: background-color 0.3s, color 0.3s; /* Transitions pour le survol */
 }
 .demarche_associee:hover {
-    color: #3f2203; /* Couleur du texte au survol */
+    color: #004152; /* Couleur du texte au survol */
 }
 
 /* Popup Captage */
@@ -613,4 +613,3 @@ a.captage_link:active {
 #results div:hover {
     background-color: #f0f0f0;
 }
-
