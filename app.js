@@ -14,7 +14,11 @@ $(document).ready(function () {
 
     const leftPanel = document.getElementById("panel-left");
     const leftPanelWidth = "300px";
-    const openLeftButtons = document.querySelectorAll('.openbtn-left'); 
+    const openLeftButtons = document.querySelectorAll('.openbtn-left');
+
+    const demarcheSearchFields = ['nom', 'structure_animation', 'animateur', 'departement']; // Champs de recherche pour la couche Démarche
+    const captageSearchFields = ['nom', 'nom_demarche', 'maitre_ouvrage', 'nom_com']; // Champs de recherche pour la couche Captage
+
     // ------------------------------------------------------------------------------------------------------------
     ///// Méthodes
 
@@ -878,14 +882,17 @@ $(document).ready(function () {
         }
     
         // Fonction pour rechercher dans une couche GeoJSON
-        function searchInLayer(layer, layerType) {
+        function searchInLayer(layer, layerType, searchFields) {
             layer.eachLayer(function(featureLayer) {
                 var properties = featureLayer.feature.properties;
-                for (var key in properties) {
-                    if (properties[key].toString().toLowerCase().indexOf(query) !== -1) {
+                var sous_type = (layerType === 'demarche') ? properties.type_web : properties.type_captage; // si démarche, PAT, AAC ou autre, si captage, Prioritaire ou Sensible
+                for (var i = 0; i < searchFields.length; i++) {
+                    var field = searchFields[i];
+                    if (properties[field] && properties[field].toString().toLowerCase().indexOf(query) !== -1) {
                         results.push({
                             layer: featureLayer,
-                            type: layerType
+                            type: layerType,
+                            ss_type: sous_type
                         });
                         break;
                     }
@@ -894,8 +901,8 @@ $(document).ready(function () {
         }
         
         // Recherche dans les deux couches avec indication du type
-        searchInLayer(demarches, 'demarche');
-        searchInLayer(captages, 'captage');
+        searchInLayer(demarches, 'demarche', demarcheSearchFields);
+        searchInLayer(captages, 'captage', captageSearchFields);
 
         // Trier les résultats par ordre alphabétique en fonction du champ 'nom'
         results.sort(function(a, b) {
@@ -911,8 +918,7 @@ $(document).ready(function () {
         results.forEach(function(result) {
             var listItem = document.createElement('div');
             listItem.innerHTML = result.layer.feature.properties.nom;  // Modifier en fonction de ce que vous voulez afficher
-            listItem.style.cursor = 'pointer';
-            
+            // listItem.style.cursor = 'pointer';
             // Appliquer une fonction différente selon le type
             listItem.addEventListener('click', function() {
                 if (result.type === 'demarche') {
@@ -921,6 +927,23 @@ $(document).ready(function () {
                     handleCaptageClick(result.layer);
                 }
             });
+            listItem.classList.add("communResult");
+            // Donner la classe suivant type et ss_type
+            var styleResult ;
+            if (result.type === 'demarche') {
+                if (result.ss_type === 'AAC' || result.ss_type === 'PAT'){
+                    styleResult = 'AACResult';
+                } else {
+                    styleResult = 'autreDemarcheResult';
+                }
+            } else {
+                if (result.ss_type === 'Sensible'){
+                    styleResult = 'captageSensibleResult';
+                } else {
+                    styleResult = 'captagePrioritaireResult';
+                }
+            }
+            listItem.classList.add(styleResult);
             resultsDiv.appendChild(listItem);
         });
 

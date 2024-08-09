@@ -525,7 +525,7 @@ a.captage_link:active {
 }
 #panel-left {
     left: 0;
-    background: #fff;
+    background: #007c8e;
 }
 #panel-right{
     right: 0;
@@ -547,8 +547,7 @@ a.captage_link:active {
 #bt_fermer-left {
     margin-right : 5px;
     background-color: transparent;
-    color: #007c8e;
-    border: 1px solid #007c8e;
+    color: white;
 }
 
 .btContainer-left{
@@ -570,9 +569,18 @@ a.captage_link:active {
     width : calc(100% - 10px) ;
 }
 
+/* Empêche la bordure de changer lorsqu'on clique ou écrit dans le champ */
+input:focus {
+    border-color: inherit; /* Conserve la couleur de bordure existante */
+    outline: none; /* Supprime le contour bleu par défaut dans certains navigateurs */
+}
+
 #searchInput{
+    font-family: 'FilsonPro', sans-serif;
     display: block;
     text-align: center;
+    border: 2px solid #007c8e;
+    border-radius : 3px;
     padding: 5px 30px;
     width : 100%;
     box-sizing: border-box; /* prise en compte du padding et de la marge pour la largeur totale */
@@ -581,7 +589,7 @@ a.captage_link:active {
 .clear-button {
     position: absolute;
     right: 15px; /* Positionne la croix à droite */
-    top: 37px; /* Centrage vertical */
+    top: 39px; /* Centrage vertical */
     cursor: pointer;
     font-size: 18px;
     color: #007c8e; /* Couleur de la croix */
@@ -591,7 +599,7 @@ a.captage_link:active {
 .search-loupe{
     position: absolute;
     left: 10px; /* Positionne la croix à droite */
-    top: 37px; /* Centrage vertical */
+    top: 39px; /* Centrage vertical */
     width: 25px;
 }
 
@@ -599,17 +607,67 @@ a.captage_link:active {
 #searchInput:not(:placeholder-shown) ~ #clearSearch {
     display: inline; 
 }
+#searchInput:not(:placeholder-shown) ~ #results {
+    display: block; 
+}
+#searchInput:not(:placeholder-shown){
+    border-bottom: 0px;
+    border-radius: 3px 3px 0 0;
+}
 
 #results{
+    display: none;
     font-size: 0.85rem;
+    border: 2px solid #007c8e;
+    border-top: 0px;
+    padding: 4px;
+    border-radius: 0 0 3px 3px;
+    background-color: white;
+    overflow-y: auto;
+    max-height: 40vh;
 }
 
-#results div {
+.communResult{
     display: block;
     padding: 8px;
-    border-bottom: 1px solid #ddd;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-bottom: 2px;
 }
 
-#results div:hover {
-    background-color: #f0f0f0;
+.AACResult{
+    color : #576b35;
+    /* border-top: 2px solid #576b35;
+    border-bottom: 2px solid #576b35;
+    border-left: none;
+    border-right: none;*/
+}
+.AACResult:hover{
+    background-color : #576b35;
+    color:white;
+}
+.autreDemarcheResult{
+    color : #007c8e;
+    /* border: 3px solid #007c8e; */
+}
+.autreDemarcheResult:hover{
+    background-color : #007c8e;
+    color:white;
+}
+.captageSensibleResult{
+    color : #eeba00;
+    /* border: 3px solid #eeba00; */
+}
+.captageSensibleResult:hover{
+    background-color : #eeba00;
+    color:white;
+}
+.captagePrioritaireResult{
+    color : #0c4e67;
+    /* border: 3px solid #0c4e67; */
+}
+.captagePrioritaireResult:hover{
+    background-color : #0c4e67;
+    color:white;
 }
