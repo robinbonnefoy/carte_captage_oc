@@ -671,3 +671,40 @@ input:focus {
     background-color : #0c4e67;
     color:white;
 }
+
+/* --- LEGENDE --- */
+
+#legend {
+    background: white;
+    margin: 5px;
+    padding: 10px;
+    bottom: 10px;
+    border: 2px solid #007c8e;
+    border-radius: 3px;
+}
+
+.legend-element {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    font-family: 'SourceSansPro', sans-serif;
+    font-size: 0.8rem;
+}
+
+.legend-element span {
+    width: 25px;
+    height: 20px;
+    display: inline-block;
+    margin-right: 5px;
+    border-radius : 3px;
+}
+
+.legend-arbitraire {
+    margin-left : 10px;
+}
+
+.legend-goutte {
+    width: 30px;
+    height: auto;
+    margin-right: 2px;
+}
