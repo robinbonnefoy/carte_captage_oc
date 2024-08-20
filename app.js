@@ -19,6 +19,10 @@ $(document).ready(function () {
     const demarcheSearchFields = ['nom', 'structure_animation', 'animateur', 'departement']; // Champs de recherche pour la couche Démarche
     const captageSearchFields = ['nom', 'nom_demarche', 'maitre_ouvrage', 'nom_com']; // Champs de recherche pour la couche Captage
 
+    var Ldata = {}; // Données de l'ensemble des structures
+    var filterOn = false; // Etat général du filtre des démarches (activé ou non)
+    var filterDemarche = {'en_cours':false, 'terminee':false, 'non_initie':false}; // Filtre des démarches
+
     // ------------------------------------------------------------------------------------------------------------
     ///// Méthodes
 
@@ -151,6 +155,36 @@ $(document).ready(function () {
           return 'N/A';
         }
     }
+
+    // Filtrer les démarches
+    function customFilter(feature) {
+        if (filterOn) {
+            // Si le filtre est activé
+            // console.log('--------');
+            // console.log(feature.properties.statut_web);
+            var test = 0;
+            if (filterDemarche['en_cours']){
+                test += feature.properties.statut_web === 'en_cours';
+                // console.log(`En cours : ${test}`);
+            } if (filterDemarche['terminee']){
+                test += feature.properties.statut_web === 'terminee';
+                // console.log(`Terminée : ${test}`);
+            } if (filterDemarche['non_initie']){
+                test += feature.properties.statut_web === 'non_initie';
+                // console.log(`Non initiée : ${test}`);
+            }
+            // console.log('--------');
+            // console.log(`test : ${test}`)
+            test_final = (test > 0) ? false : true;
+            // console.log(`test final : ${test_final}`)
+            return test_final;
+
+        } else {
+            // Sinon, on retourne toutes les démarches
+            return true
+        }
+    }
+
 
     /// Panneau latéral de gauche
 
@@ -527,12 +561,15 @@ $(document).ready(function () {
     }
 
     const demarches = L.geoJSON(null,{
+        filter: customFilter,
         style: style_demarches,
         onEachFeature: onEachFeature_demarches,
         attribution: 'FREDON Occitanie'
     });
     $.getJSON('data/demarches.geojson', function(data){
         demarches.addData(data).addTo(map);
+        Ldata.demarches = data ;
+        console.log(Ldata);
     });
 
     // --------------------------------------------------------------------------------------------------------------
@@ -957,8 +994,48 @@ $(document).ready(function () {
         document.getElementById('results').innerHTML = ''; // Efface les suggestions
         searchInput.focus(); // Redonne le focus au champ de recherche
     });
-    
-   
+
+    // --------------------------------------------------------------------------------------------------------------
+    ///// FILTRE
+
+    function updateFilter () {
+        // Mise à jour de l'état généla du filtre
+        if (Object.values(filterDemarche).every(value => value === false)) {
+            // Si tous les éléments de filterDemarche sont false, alors le filtre est désactivé
+            filterOn = false ;
+        } else {
+            // Sinon, filtre activé
+            filterOn = true ;
+        }
+        // Mise à jour de la couche Démarches
+        demarches.clearLayers(); // Effacer toutes les démarches
+        demarches.addData(Ldata.demarches); // Ajouter de nouveau les données
+    }
+
+    function generateButton(id,statut) {
+        // Récupérez la case à cocher et l'élément correspondant à l'image
+        var checkbox = document.getElementById(`${id}`);
+        var customCheckbox = checkbox.nextElementSibling; // Récupère l'élément juste après
+        // Au changement d'état        
+        checkbox.addEventListener('change', function() {
+            if (checkbox.checked) {
+                // Oeil ouvert = occultation
+                customCheckbox.classList.remove('checked'); // Changer style vers oeil ouvert
+                filterDemarche[statut] = false; // Désactivation du filtre
+            } else {
+                // Oeil fermé = occultation
+                customCheckbox.classList.add('checked'); // Changer style vers oeil fermé
+                filterDemarche[statut] = true; // Activation du filtre
+            }
+            updateFilter();
+            console.log(filterOn);
+            console.log(filterDemarche);
+        });
+    }
+
+    generateButton('filtre_en_cours', 'en_cours');
+    generateButton('filtre_terminee', 'terminee');
+    generateButton('filtre_non_initie', 'non_initie');
 
     // --------------------------------------------------------------------------------------------------------------
 

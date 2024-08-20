@@ -78,7 +78,7 @@
             <span id="clearSearch" class="clear-button">&times;</span>        
             <div id="results"></div>
         </div>
-        <div id="legend">
+        <div id="legend" class="container-left">
             <div class="legend-element">
                 <img src="assets/images/goutte_j.png" alt="captage sensible" class="legend-goutte">
                 Captage sensible
@@ -116,7 +116,35 @@
                 Bassin versant
             </div>
         </div>
+
+        <div id="filtre" class="container-left">
+            Animation
+            <ul>
+                <li class="layer-element">
+                    <label title="Afficher / Masquer les animations en cours ou en émergence" for="filtre_en_cours">
+                      <input type="checkbox" id="filtre_en_cours" name="item" class="item" value="En émergence / en cours" checked>
+                      <span class="custom-checkbox"></span>
+                      <span class="custom-text"> En émergence / en cours </span>
+                    </label>
+                </li>
+                <li class="layer-element">
+                    <label title="Afficher / Masquer les animations terminées" for="filtre_terminee">
+                      <input type="checkbox" id="filtre_terminee" name="item" class="item" value="Terminées" checked>
+                      <span class="custom-checkbox"></span>
+                      <span class="custom-text">Terminées</span>
+                    </label>
+                </li>
+                <li class="layer-element">
+                    <label title="Afficher / Masquer les animations non initiées" for="filtre_non_initie">
+                      <input type="checkbox" id="filtre_non_initie" name="item" class="item" value="Non initiées" checked>
+                      <span class="custom-checkbox"></span>
+                      <span class="custom-text">Non initiées</span>
+                    </label>
+                </li>
+            </ul>
+        </div>
     </div>
+
 
     <script src="app.js"></script>
 

@@ -674,7 +674,7 @@ input:focus {
 
 /* --- LEGENDE --- */
 
-#legend {
+.container-left {
     background: white;
     margin: 5px;
     padding: 10px;
@@ -707,4 +707,49 @@ input:focus {
     width: 30px;
     height: auto;
     margin-right: 2px;
+}
+
+/* --- Filtre ---  */
+
+ul {
+    margin: 0 px;
+    padding: 0;
+    list-style-type: none;
+}
+
+label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-family: 'SourceSansPro', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    /* text-transform: uppercase; mise en majuscule des libellé du filtre */
+    cursor: pointer;
+  }
+
+.custom-text.checked {
+    text-decoration: line-through;
+}
+
+.layer-element{
+    margin: 3px 0;
+}
+
+.custom-checkbox {
+  display: inline-block;
+  width: 40px !important; /* Ajustez la largeur de l'image selon vos besoins */
+  height: 20px !important; /* Ajustez la hauteur de l'image selon vos besoins */
+  background-image: url('assets/images/oeil_ouvert.png');
+  background-size: cover;  /*Ajustez la taille de l'image */
+}
+
+/* Style pour lorsque la checkbox est cochée */
+.custom-checkbox.checked {
+  background-image: url('assets/images/oeil_ferme.png');
+}
+
+.item {
+  display: none; /* ne pas afficher les chekcbox originales */
 }
