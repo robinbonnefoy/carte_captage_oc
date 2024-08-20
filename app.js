@@ -157,21 +157,16 @@ $(document).ready(function () {
     }
 
     // Filtrer les démarches
-    function customFilter(feature) {
+    function demarchesFilter(feature) {
         if (filterOn) {
             // Si le filtre est activé
-            // console.log('--------');
-            // console.log(feature.properties.statut_web);
             var test = 0;
             if (filterDemarche['en_cours']){
-                test += feature.properties.statut_web === 'en_cours';
-                // console.log(`En cours : ${test}`);
+                test += feature.properties.statut_web === 'en_cours' || feature.properties.statut_web === 'en_emergence';
             } if (filterDemarche['terminee']){
                 test += feature.properties.statut_web === 'terminee';
-                // console.log(`Terminée : ${test}`);
             } if (filterDemarche['non_initie']){
                 test += feature.properties.statut_web === 'non_initie';
-                // console.log(`Non initiée : ${test}`);
             }
             // console.log('--------');
             // console.log(`test : ${test}`)
@@ -183,6 +178,26 @@ $(document).ready(function () {
             // Sinon, on retourne toutes les démarches
             return true
         }
+    }
+
+    // Filtrer les captages
+    function captagesFilter (feature){
+        if (filterOn) {
+            var statut_web = getStatutWebById(feature.properties.id_demarche_web);
+            var test = 0;
+            if (filterDemarche['en_cours']){
+                test += statut_web === 'en_cours' || feature.properties.statut_web === 'en_emergence';
+            } if (filterDemarche['terminee']){
+                test += statut_web === 'terminee';
+            } if (filterDemarche['non_initie']){
+                test += statut_web === 'non_initie' || statut_web === null;
+            }
+            test_final = (test > 0) ? false : true;
+            return test_final;
+        } else {
+            return true
+        }
+        
     }
 
 
@@ -561,7 +576,7 @@ $(document).ready(function () {
     }
 
     const demarches = L.geoJSON(null,{
-        filter: customFilter,
+        filter: demarchesFilter,
         style: style_demarches,
         onEachFeature: onEachFeature_demarches,
         attribution: 'FREDON Occitanie'
@@ -848,6 +863,7 @@ $(document).ready(function () {
     }
 
     const captages = L.geoJSON(null, {
+        filter: captagesFilter,
         onEachFeature : onEachFeature_captage,
         pointToLayer: function (feature, latlng){
             return L.marker(latlng, {icon: captageIcon(feature.properties.type_captage)})}
@@ -897,6 +913,7 @@ $(document).ready(function () {
 
     $.getJSON('data/captages.geojson', function(data){
         captages.addData(data).addTo(map);
+        Ldata.captages = data;
         updateGeoJSONLayerVisibility();
     });
 
@@ -998,6 +1015,20 @@ $(document).ready(function () {
     // --------------------------------------------------------------------------------------------------------------
     ///// FILTRE
 
+    // Récupère le statut_web à partir de l'id_demarche_web
+    function getStatutWebById(idDemarcheWeb) {
+        // Trouver l'élément correspondant
+        var elementTrouve = Ldata.demarches.features.find(function(feature) {
+            return feature.properties.id_demarche_web === idDemarcheWeb;
+        });
+        // Retourner le statut_web si l'élément est trouvé, sinon retourner null
+        if (elementTrouve) {
+            return elementTrouve.properties.statut_web;
+        } else {
+            return null; // Ou une valeur par défaut si l'ID n'est pas trouvé
+        }
+    }
+
     function updateFilter () {
         // Mise à jour de l'état généla du filtre
         if (Object.values(filterDemarche).every(value => value === false)) {
@@ -1010,6 +1041,10 @@ $(document).ready(function () {
         // Mise à jour de la couche Démarches
         demarches.clearLayers(); // Effacer toutes les démarches
         demarches.addData(Ldata.demarches); // Ajouter de nouveau les données
+
+        // Mise à jour de la couche Captages
+        captages.clearLayers(); // Effacer toutes les démarches
+        captages.addData(Ldata.captages); // Ajouter de nouveau les données
     }
 
     function generateButton(id,statut) {
