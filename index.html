@@ -18,18 +18,15 @@
     <!-- JQuery -->
 	<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
 
-    <!-- L.Mask (https://github.com/ptma/Leaflet.Mask) -->
-    <!-- <script src="assets/js/leaflet.mask.js"></script> -->
-
     <!-- Inverser les polygones - Leaflet.snogylop (https://github.com/ebrelsford/Leaflet.snogylop) -->
     <script src="assets/js/leaflet.snogylop.js"></script>
 
     <!-- Import du style css -->
 	<link rel="stylesheet" type="text/css" href="style.css">
 
-
-    
-
+    <!-- Plein-écran -->
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
 
 </head>
 <body>
@@ -60,7 +57,6 @@
                     Aucune demarche / AAC sélectionnée
                 </div>
             </fieldset>
-
             <fieldset id="onglet_captages">
                 <div class="no_demarche"> 
                     Aucun captage sélectionné
@@ -153,7 +149,6 @@
             </ul>
         </div>
     </div>
-
 
     <script src="app.js"></script>
 

@@ -28,6 +28,32 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------------------------------------------
     ///// Méthodes
 
+    // Fonction pour basculer en mode plein écran
+    function toggleFullscreen() {
+        let elem = document.documentElement;
+        if (!document.fullscreenElement) {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { // Firefox
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { // Chrome, Safari et Opera
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { // IE/Edge
+                elem.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) { // Firefox
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { // Chrome, Safari et Opera
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { // IE/Edge
+                document.msExitFullscreen();
+            }
+        }
+    }
+
     // Efface l'icone de chargement une fois la carte chargée
 	function chargement_carte () {
         console.log('Carte chargée !');
@@ -262,13 +288,27 @@ $(document).ready(function () {
     // 	Création de la carte (coordonnées de centrage et zoom)
     var map = L.map('map',config).setView([43.70188, 2.13676], 8); 
     
-    // Ajout de la fonctionnalité plein-écran
-    //   map.addControl(new L.Control.Fullscreen({
-    //       title: {
-    //           'false': 'Plein-écran',
-    //           'true': 'Quitter plein-écran'
-    //           }
-    //   }));
+    ///// Ajout de la fonctionnalité plein-écran
+    L.Control.FullscreenControl = L.Control.extend({
+        onAdd: function(map) {
+            var container = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-fullscreen');
+            var fullscreenBtn = L.DomUtil.create('a', '', container);
+            fullscreenBtn.href = '#';
+            fullscreenBtn.innerHTML = ''; // Icône de plein écran
+
+            L.DomEvent.on(fullscreenBtn, 'click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                L.DomEvent.preventDefault(e);
+                toggleFullscreen();
+                fullscreenBtn.innerHTML = document.fullscreenElement ? '' : '◼';
+            });
+
+            return container;
+        }
+    });
+
+    // Ajouter le contrôle à la carte
+    map.addControl(new L.Control.FullscreenControl({ position: 'topleft' }));
 
 
     // --------------------------------------------------------------------------------------------------------------
@@ -1006,6 +1046,7 @@ $(document).ready(function () {
                 } else if (result.type === 'captage') {
                     handleCaptageClick(result.layer);
                 }
+                clearSearch(); // effacer les suggestions de recherche
             });
             listItem.classList.add("communResult");
             // Donner la classe suivant type et ss_type
@@ -1030,12 +1071,17 @@ $(document).ready(function () {
         console.log(results);
     });
 
-    // Fonction pour gérer le clic sur la croix
-    document.getElementById('clearSearch').addEventListener('click', function() {
+    // Effacer les suggestion de recherche
+    function clearSearch () {
         var searchInput = document.getElementById('searchInput');
         searchInput.value = ''; // Vide le champ de recherche
         document.getElementById('results').innerHTML = ''; // Efface les suggestions
         searchInput.focus(); // Redonne le focus au champ de recherche
+    }
+
+    // Fonction pour gérer le clic sur la croix
+    document.getElementById('clearSearch').addEventListener('click', function() {
+        clearSearch();
     });
 
     // --------------------------------------------------------------------------------------------------------------
@@ -1051,7 +1097,7 @@ $(document).ready(function () {
         if (elementTrouve) {
             return {'statut_web' : elementTrouve.properties.statut_web, 'membre_reseau' : elementTrouve.properties.membre_reseau};
         } else {
-            return {'statut_web' : null, 'membre_reseau' : null}; // Ou une valeur par défaut si l'ID n'est pas trouvé
+            return {'statut_web' : 'non_initie', 'membre_reseau' : 'non'}; // Ou une valeur par défaut si l'ID n'est pas trouvé
         }
     }
 
