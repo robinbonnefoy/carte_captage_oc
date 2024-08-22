@@ -21,7 +21,7 @@ $(document).ready(function () {
 
     var Ldata = {}; // Données de l'ensemble des structures
     var filterOn = false; // Etat général du filtre des démarches (activé ou non)
-    var filterDemarche = {'en_cours':false, 'terminee':false, 'non_initie':false}; // Filtre des démarches
+    var filterDemarche = {'en_cours':false, 'terminee':false, 'non_initie':false, 'membre_reseau': false}; // Filtre des démarches
 
     // ------------------------------------------------------------------------------------------------------------
     ///// Méthodes
@@ -156,50 +156,57 @@ $(document).ready(function () {
         }
     }
 
-    // Filtrer les démarches
-    function demarchesFilter(feature) {
+
+    // Filtrer
+
+    // Appelle la fonction de filtre avec 2 arguments
+    function createFilter(couche) {
+        return function(feature) {
+            return customFilter(feature, couche);
+        };
+    }
+
+    // Fct filtre
+    function customFilter(feature, couche) {
         if (filterOn) {
             // Si le filtre est activé
+            var statut_web ;
+            var membre_reseau ;
+            if (couche === 'demarches') {
+                statut_web = feature.properties.statut_web;
+                membre_reseau = feature.properties.membre_reseau;
+            } else {
+                // Couche captages
+                var jointure_info = getStatutWebById(feature.properties.id_demarche_web); // On récupére les données depuis la démarche jointe
+                var statut_web = jointure_info['statut_web'];
+                var membre_reseau = jointure_info['membre_reseau'];
+            }
+            // Filtre sur l'état de l'animation
             var test = 0;
             if (filterDemarche['en_cours']){
-                test += feature.properties.statut_web === 'en_cours' || feature.properties.statut_web === 'en_emergence';
+                test += statut_web === 'en_cours' || statut_web === 'en_emergence';
             } if (filterDemarche['terminee']){
-                test += feature.properties.statut_web === 'terminee';
+                test += statut_web === 'terminee';
             } if (filterDemarche['non_initie']){
-                test += feature.properties.statut_web === 'non_initie';
+                test += statut_web === 'non_initie';
             }
-            // console.log('--------');
-            // console.log(`test : ${test}`)
             test_final = (test > 0) ? false : true;
-            // console.log(`test final : ${test_final}`)
+            // Filtre sur membre du réseau
+            if (filterDemarche['membre_reseau'] === true){
+                // console.log(feature.properties.membre_reseau);
+                var test_membre = membre_reseau === 'oui';
+                if (test_final === true && test_membre === true) {
+                    test_final = true ;
+                } else {
+                    test_final = false ;
+                }
+            }
             return test_final;
-
         } else {
             // Sinon, on retourne toutes les démarches
             return true
         }
     }
-
-    // Filtrer les captages
-    function captagesFilter (feature){
-        if (filterOn) {
-            var statut_web = getStatutWebById(feature.properties.id_demarche_web);
-            var test = 0;
-            if (filterDemarche['en_cours']){
-                test += statut_web === 'en_cours' || feature.properties.statut_web === 'en_emergence';
-            } if (filterDemarche['terminee']){
-                test += statut_web === 'terminee';
-            } if (filterDemarche['non_initie']){
-                test += statut_web === 'non_initie' || statut_web === null;
-            }
-            test_final = (test > 0) ? false : true;
-            return test_final;
-        } else {
-            return true
-        }
-        
-    }
-
 
     /// Panneau latéral de gauche
 
@@ -367,7 +374,7 @@ $(document).ready(function () {
         demarches.eachLayer(function (layer) {
             // Si la démarche est associée au captage
             if (layer.feature.properties.id_demarche_web === idDemarcheWeb) {
-                console.log(layer.feature.properties.nom);
+                // console.log(layer.feature.properties.nom);
                 nomDemarche =  layer.feature.properties.nom;
             }
         });
@@ -576,7 +583,7 @@ $(document).ready(function () {
     }
 
     const demarches = L.geoJSON(null,{
-        filter: demarchesFilter,
+        filter: createFilter('demarches'),
         style: style_demarches,
         onEachFeature: onEachFeature_demarches,
         attribution: 'FREDON Occitanie'
@@ -584,7 +591,6 @@ $(document).ready(function () {
     $.getJSON('data/demarches.geojson', function(data){
         demarches.addData(data).addTo(map);
         Ldata.demarches = data ;
-        console.log(Ldata);
     });
 
     // --------------------------------------------------------------------------------------------------------------
@@ -863,7 +869,7 @@ $(document).ready(function () {
     }
 
     const captages = L.geoJSON(null, {
-        filter: captagesFilter,
+        filter : createFilter('captages'),
         onEachFeature : onEachFeature_captage,
         pointToLayer: function (feature, latlng){
             return L.marker(latlng, {icon: captageIcon(feature.properties.type_captage)})}
@@ -1015,7 +1021,7 @@ $(document).ready(function () {
     // --------------------------------------------------------------------------------------------------------------
     ///// FILTRE
 
-    // Récupère le statut_web à partir de l'id_demarche_web
+    // Récupère le statut_web et le membre_reseau à partir de l'id_demarche_web
     function getStatutWebById(idDemarcheWeb) {
         // Trouver l'élément correspondant
         var elementTrouve = Ldata.demarches.features.find(function(feature) {
@@ -1023,9 +1029,9 @@ $(document).ready(function () {
         });
         // Retourner le statut_web si l'élément est trouvé, sinon retourner null
         if (elementTrouve) {
-            return elementTrouve.properties.statut_web;
+            return {'statut_web' : elementTrouve.properties.statut_web, 'membre_reseau' : elementTrouve.properties.membre_reseau};
         } else {
-            return null; // Ou une valeur par défaut si l'ID n'est pas trouvé
+            return {'statut_web' : null, 'membre_reseau' : null}; // Ou une valeur par défaut si l'ID n'est pas trouvé
         }
     }
 
@@ -1053,14 +1059,15 @@ $(document).ready(function () {
         var customCheckbox = checkbox.nextElementSibling; // Récupère l'élément juste après
         // Au changement d'état        
         checkbox.addEventListener('change', function() {
+            console.log(checkbox.checked);
             if (checkbox.checked) {
-                // Oeil ouvert = occultation
+                // Oeil ouvert = affichage / Case cochée = occultation non membre
                 customCheckbox.classList.remove('checked'); // Changer style vers oeil ouvert
-                filterDemarche[statut] = false; // Désactivation du filtre
+                filterDemarche[statut] = (statut !== 'membre_reseau')? false : true; // Désactivation du filtre animation ou activation du filtre membre
             } else {
-                // Oeil fermé = occultation
+                // Oeil fermé = occultation / Case cochée
                 customCheckbox.classList.add('checked'); // Changer style vers oeil fermé
-                filterDemarche[statut] = true; // Activation du filtre
+                filterDemarche[statut] = (statut !== 'membre_reseau')? true : false; // Activation du filtre
             }
             updateFilter();
             console.log(filterOn);
@@ -1071,7 +1078,8 @@ $(document).ready(function () {
     generateButton('filtre_en_cours', 'en_cours');
     generateButton('filtre_terminee', 'terminee');
     generateButton('filtre_non_initie', 'non_initie');
-
+    generateButton('filtre_reseau', 'membre_reseau');
+    
     // --------------------------------------------------------------------------------------------------------------
 
     map.whenReady(chargement_carte); // Une fois la carte chargee, on efface l'icone de chargement
