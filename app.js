@@ -23,6 +23,8 @@ $(document).ready(function () {
     var filterOn = false; // Etat général du filtre des démarches (activé ou non)
     var filterDemarche = {'en_cours':false, 'terminee':false, 'non_initie':false, 'membre_reseau': false}; // Filtre des démarches
 
+    let nbCouchesChargees = 0 ; // Nb couches chargées
+
     // ------------------------------------------------------------------------------------------------------------
     ///// Méthodes
 
@@ -156,7 +158,6 @@ $(document).ready(function () {
         }
     }
 
-
     // Filtrer
 
     // Appelle la fonction de filtre avec 2 arguments
@@ -238,7 +239,17 @@ $(document).ready(function () {
     document.getElementById('bt_fermer-left').addEventListener("click", () => {
         toggleLeftPanel();
     });
-    
+
+
+    // Ordonner l'affichage des couches
+    function orderingDisplayLayers () {
+        departement.bringToFront();
+        bassin_metropole.bringToFront();
+        demarches.bringToFront();
+        zp.bringToFront();
+        region.bringToFront();
+        captages.bringToFront();
+    }    
 
     // ------------------------------------------------------------------------------------------------------------
     ///// Création de l'objet carte 
@@ -278,6 +289,7 @@ $(document).ready(function () {
     });
     $.getJSON('data/bassins_oc.geojson', function(data){
         bassin_metropole.addData(data).addTo(map);
+        nbCouchesChargees++;
     });
                 
     // --------------------------------------------------------------------------------------------------------------
@@ -290,16 +302,26 @@ $(document).ready(function () {
     });
     $.getJSON('data/dep_oc.geojson', function(data){
         departement.addData(data).addTo(map);
+        nbCouchesChargees++;
     });
 
     // --------------------------------------------------------------------------------------------------------------
     ///// Couche région (EPSG:4326)
-    const region = L.mask('data/region_oc.geojson', {
-        fitBounds: false,
-        restrictBounds: false,
-        fillOpacity: 0.7,
-        stroke : 0
-    }).addTo(map);
+
+    const region = L.geoJSON(null, {
+        invert : true, // symbologie polygones inversés
+        style : {
+            color:'rgb(254,254,254)',
+            weight:2,
+            fillOpacity: 0.7,
+            stroke : 0
+        },
+        interactive: false // couche non cliquable
+    });
+    $.getJSON('data/region_oc.geojson', function(data){
+        region.addData(data).addTo(map);
+        nbCouchesChargees++;
+    });
 
     // --------------------------------------------------------------------------------------------------------------
     ///// Couche Démarches (EPSG:4326)
@@ -591,6 +613,7 @@ $(document).ready(function () {
     $.getJSON('data/demarches.geojson', function(data){
         demarches.addData(data).addTo(map);
         Ldata.demarches = data ;
+        nbCouchesChargees++;
     });
 
     // --------------------------------------------------------------------------------------------------------------
@@ -607,12 +630,8 @@ $(document).ready(function () {
     });
     $.getJSON('data/zpaac.geojson', function(data){
         zp.addData(data).addTo(map);
+        nbCouchesChargees++;
     });
-
-    zp.bringToFront();
-
-
-    // aac.bringToFront();
 
     // --------------------------------------------------------------------------------------------------------------
     ///// Captages (EPSG:4326)
@@ -921,6 +940,7 @@ $(document).ready(function () {
         captages.addData(data).addTo(map);
         Ldata.captages = data;
         updateGeoJSONLayerVisibility();
+        nbCouchesChargees++;
     });
 
     // Mise à jour de la visibilité de la carte lors du zoom / dézoom
@@ -1072,6 +1092,7 @@ $(document).ready(function () {
             updateFilter();
             console.log(filterOn);
             console.log(filterDemarche);
+            orderingDisplayLayers();
         });
     }
 
@@ -1081,7 +1102,37 @@ $(document).ready(function () {
     generateButton('filtre_reseau', 'membre_reseau');
     
     // --------------------------------------------------------------------------------------------------------------
+    ///// CHARGEMENT
 
-    map.whenReady(chargement_carte); // Une fois la carte chargee, on efface l'icone de chargement
+    // Ordonner l'affichage des couches
+    function initialOrderingLayers () {
+        return new Promise((resolve) => {
+            orderingDisplayLayers();
+            resolve();
+        });
+    }
+
+    // Attendre que toutes les couches soit chargées
+    function verifChargement() {
+        return new Promise((resolve) => {
+        const interval = setInterval(() => {
+            console.log(`Nb couches chargées : ${nbCouchesChargees} / 6`);
+            if (nbCouchesChargees === 6) {
+            clearInterval(interval);
+            chargement_carte();
+            resolve();
+            }
+        }, 50);
+        });
+    }
+
+    // Construction du filtre bonnes pratiques
+    verifChargement()
+    .then(() => initialOrderingLayers())
+    .catch((error) => {
+        console.error("Erreur chargement des couches : ", error);
+    });
+
+    // map.whenReady(chargement_carte); // Une fois la carte chargee, on efface l'icone de chargement
 
 }); // fin JQuery
