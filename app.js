@@ -59,8 +59,15 @@ $(document).ready(function () {
         console.log('Carte chargée !');
 		setTimeout(() => {
             // Cache le loader et affiche la carte une fois le chargement terminé
-            document.getElementById('loader').style.display = 'none';     
-        }, 3000);               
+            document.getElementById('loader').style.display = 'none';
+
+            // Afficher la notice
+            document.getElementById('notice').style.display = 'flex'; 
+            // Cacher la notice lors du clic sur la carte
+            document.addEventListener('click', function () {
+                document.getElementById('notice').style.display = 'none';
+            });
+        }, 2000);               
 	};
 
     function closePanel (panel,widthPanel,fctToggle) {

@@ -30,10 +30,46 @@
 
 </head>
 <body>
+
+    <!-- Icone de chargement  -->
     <div id="loader">
         <img id="logo" src="assets/images/logo_captage.png" alt="Logo Captages d'EAUccitanie">
     </div>
+
+    
+    <!-- Notice sur utilisation de la carte -->
+    <div class="notice" id="notice">
+        <div class="notice-content">
+            <img id="fleche1"  src="assets/images/fleche1.png" alt="fleche1">
+            <div id="notice1">
+              <p> <b>Zoomer / Mettre en plein-écran  </b> </p>
+            </div>
+            <img id="fleche2a"  src="assets/images/fleche2.png" alt="fleche2">
+            <div id="notice2a">
+              <p> <b> Infos sur les démarches </b> </p>
+            </div>
+            <img id="fleche2b"  src="assets/images/fleche2.png" alt="fleche2">
+            <div id="notice2b">
+              <p> <b> Infos sur les captages </b> </p>
+            </div>
+            <img id="fleche3a"  src="assets/images/fleche3.png" alt="fleche3">
+            <div id="notice3a">
+              <p> <b> Rechercher </b> </p>
+            </div>
+            <img id="fleche3b"  src="assets/images/fleche3.png" alt="fleche3">
+            <div id="notice3b">
+              <p> <b> Légende / Filtrer </b> </p>
+            </div>
+            <img id="tactile" src="assets/images/tactile.png" alt="tactile">
+            <div id="notice5">
+              <p> <b>Cliquer</b> sur une démarche ou un captage pour plus d'informations </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte -->
     <div id="map"></div>
+
     <!-- Panneau latéral droit (Démarches / captages)-->
     <button id="bt_demarches" class="openbtn openbtn-right"><img src="assets/images/demarche.png" alt="Infos Démarche(s)" class="logo_lateral"></button>
     <button id="bt_captages" class="openbtn openbtn-right"><img src="assets/images/goutte_menu.png" alt="Infos Captage(s)" class="logo_lateral"></button>
@@ -64,6 +100,7 @@
             </fieldset>
         </div>
     </div>
+
     <!-- Panneau latéral Gauche (Recherche / Légende)-->
     <button id="bt_recherche" class="openbtn openbtn-left"><img src="assets/images/loupe.png" alt="Rechercher" class="logo_lateral"></button>
     <button id="bt_legende" class="openbtn openbtn-left"><img src="assets/images/oeil_grand.png" alt="Légende" class="logo_lateral"></button>
