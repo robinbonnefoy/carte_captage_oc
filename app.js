@@ -452,6 +452,7 @@ $(document).ready(function () {
 
     // Ouvre la démarche associée
     function openDemarcheAssociee(idDemarcheWeb){
+        console.log(`id : ${idDemarcheWeb}`);
         demarches.eachLayer(function (layer) {
             // Si la démarche est associée au captage
             if (layer.feature.properties.id_demarche_web === idDemarcheWeb) {
@@ -470,12 +471,13 @@ $(document).ready(function () {
         // Si il y a une / des démarches associées
         if (str.substring(0,4) === 'DEM_'){
             // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
-            var ids = str.split(", ");
+            var ids = str.split(",");
             // Parcourir chaque ID dans le tableau avec une boucle for
             for (var i = 0; i < ids.length; i++) {
                 // Isoler chaque ID
-                var id = ids[i];
+                let id = ids[i]; // utiliser let car créé une nouvelle instance de id à chaque itération, ce qui permet au gestionnaire d'avoir le bon id et non le dernier comme avec le var
                 var idContainer= 'ASSOC_' + id;
+                console.log(`click : ${id}`);
                 // Paramétrage des bouton Onglets
                 document.getElementById(idContainer).addEventListener("click", () => {
                     openDemarcheAssociee(id);
@@ -488,15 +490,17 @@ $(document).ready(function () {
     // Ajoute une partie dans le popup Démarche sur les démarches associées
     function demarchesAssocieesPopup(str){
         var insert = '';
+        console.log(str);
         // Si il y a une / des démarches associées
         if (str.substring(0,4) === 'DEM_'){
             insert += `<span class="popup_demarche_partie"> Démarche(s) associée(s)  </span>`;
             // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
-            var ids = str.split(", ");
+            var ids = str.split(",");
+            console.log(ids);
             // Parcourir chaque ID dans le tableau avec une boucle for
             for (var i = 0; i < ids.length; i++) {
                 // Isoler chaque ID
-                var id = ids[i];
+                let id = ids[i]; // utiliser let car créé une nouvelle instance de id à chaque itération, ce qui permet au gestionnaire d'avoir le bon id et non le dernier comme avec le var
                 insert += `
                     <span class="demarche_associee" id="ASSOC_${id}"> ${getNomDemarcheAssociee(id)} </span>
                 `;
@@ -507,6 +511,8 @@ $(document).ready(function () {
 
     // Remplir les infos de la démarche de la Partie "Démarche territoriale"
     function fillDemarcheInfo(feature){
+        console.log('----------------');
+        console.log(`Sélection : ${feature.properties.id_demarche_web}`);
         fieldset_demarches.innerHTML = `
             <p class="popup_demarche_titre"> ${feature.properties.nom} </p>
             <span class="popup_demarche_partie"> Type de démarche </span>
@@ -624,19 +630,39 @@ $(document).ready(function () {
         var style;
         // Démarches
         if (feature.properties.type_web === 'autre') {
-            style = {
-                color:'rgb(000,124,142)',
-                weight:2,
-                fillColor: 'rgb(000,124,142)',
-                fillOpacity: 0.5,
+            if (feature.properties.perimetre_arbitraire_web == 'oui'){
+                style = {
+                    color:'rgb(000,124,142)',
+                    weight:2,
+                    dashArray: 4, // contour en pointillé
+                    fillColor: 'rgb(000,124,142)',
+                    fillOpacity: 0.5,
+                }
+            } else {
+                style = {
+                    color:'rgb(000,124,142)',
+                    weight:2,
+                    fillColor: 'rgb(000,124,142)',
+                    fillOpacity: 0.5,
+                }
             }
         // AAC ou PAT 
         } else {
-            style = {
-                color:'rgb(87,107,53)',
-                weight:2,
-                fillColor: 'rgb(87,107,53)',
-                fillOpacity: 0.5,
+            if (feature.properties.perimetre_arbitraire_web == 'oui'){
+                style = {
+                    color:'rgb(87,107,53)',
+                    weight:2,
+                    dashArray: 4, // contour en pointillé
+                    fillColor: 'rgb(87,107,53)',
+                    fillOpacity: 0.5,
+                }
+            } else {
+                style = {
+                    color:'rgb(87,107,53)',
+                    weight:2,
+                    fillColor: 'rgb(87,107,53)',
+                    fillOpacity: 0.5,
+                }
             }
         }
         // Démarche terminées
