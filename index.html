@@ -115,6 +115,7 @@
             <div id="results"></div>
         </div>
         <div id="legend" class="container-left">
+            <span id="legend-titre" class="titre-container-left"> Légende </span>
             <div class="legend-element">
                 <img src="assets/images/goutte_j.png" alt="captage sensible" class="legend-goutte">
                 Captage sensible
@@ -123,13 +124,13 @@
                 <img src="assets/images/goutte_b.png" alt="captage prioritaire" class="legend-goutte">
                 Captage prioritaire
             </div>
-            <div class="legend-element">
+            <div class="legend-element" title="Zone de Protection de l'Aire d'Alimentation du Captage">
                 <span style="background-color: white; border: 2px solid rgb(144,187,70) ;"></span>
                 ZPAAC
             </div>
-            <div class="legend-element">
+            <div class="legend-element legend-space" title="Aire d'Alimentation du Captage">
                 <span style="background-color: rgb(87,107,53,0.5); border: 3px solid rgb(87,107,53);"></span>
-                AAC
+                AAC (périmètre de la démarche)
             </div>
             <div class="legend-element legend-arbitraire">
                 <span style="background-color: rgb(87,107,53,0.5); border: 3px dashed rgb(87,107,53);"></span>
@@ -137,13 +138,28 @@
             </div>
             <div class="legend-element">
                 <span style="background-color: rgb(000,124,142,0.5); border: 3px solid rgb(000,124,142)"></span>
-                Démarches
+                Démarches territoriales
             </div>
             <div class="legend-element legend-arbitraire">
                 <span style="background-color: rgb(000,124,142,0.5); border: 3px dashed rgb(000,124,142)"></span>
                 <i> Périmètre arbitraire </i>
             </div>
-            <div class="legend-element">
+            <div id="legend-membre" style="display: none;">
+                <div class="legend-element legend-membre-titre">Membre du réseau </div>
+                <div class="legend-element">
+                    <img src="assets/images/bonhomme_o.png" alt="Collectivité, syndicat d'eau potable" class="legend-bonhomme">
+                    Collectivité, syndicat d'eau potable
+                </div>
+                <div class="legend-element">
+                    <img src="assets/images/bonhomme_b.png" alt="Syndicat de bassin, EPTB" class="legend-bonhomme">
+                    Syndicat de bassin, EPTB
+                </div>
+                <div class="legend-element">
+                    <img src="assets/images/bonhomme_v.png" alt="captage prioritaire" class="legend-bonhomme">
+                   Organisme de conseil agricole
+                </div>
+            </div>
+            <div class="legend-element legend-space">
                 <span style="background-color: white; border: 2px solid rgb(113,151,141);"></span>
                 Département
             </div>
@@ -154,7 +170,7 @@
         </div>
 
         <div id="filtre" class="container-left">
-            <span id="filtre-titre"> Animations </span>
+            <span id="filtre-titre" class="titre-container-left"> Animations </span>
             <ul>
                 <li class="layer-element">
                     <label title="Afficher / Masquer les animations en cours ou en émergence" for="filtre_en_cours">
@@ -178,9 +194,18 @@
                     </label>
                 </li>
                 <li class="layer-element-reseau">
-                    <label title="Afficher que les membres du réseau" for="filtre_reseau">
-                      <input type="checkbox" id="filtre_reseau" name="item" value="Membre du réseau">
-                      <span class="custom-text">Afficher que les membres du réseau</span>
+                    <span class="custom-text">Afficher les membres :</span>
+                </li>
+                <li class="layer-element">
+                    <label title="Afficher que les membres du réseau (Bassin AG)" for="filtre_reseau_AG">
+                      <input type="checkbox" id="filtre_reseau_AG" name="item" value="Membre du réseau (Bassin AG)">
+                      <span>Bassin Adour-Garonne</span>
+                    </label>
+                </li>
+                <li class="layer-element">
+                    <label title="Afficher que les membres du réseau (Bassin RMC)" for="filtre_reseau_RMC">
+                      <input type="checkbox" id="filtre_reseau_RMC" name="item" value="Membre du réseau (Bassin RMC)">
+                      <span>Bassin Rhône-Méditerranée-Corse</span>
                     </label>
                 </li>
             </ul>
