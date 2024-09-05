@@ -184,10 +184,12 @@ $(document).ready(function () {
     // Vérifie l'URL
     function isValidUrl(string) {
         try {
-          new URL(string);
-          return `<a href="${properties.lien}"  target="_blank" class="captage_link"> ${extractDomainFromUrl(properties.lien)}</a>`;
+            new URL(string);
+            console.log(string);
+            return `<a href="${string}"  target="_blank" class="captage_link"> ${extractDomainFromUrl(string)}</a>`;
         } catch (err) {
-          return 'N/A';
+            // console.log(err);
+            return 'N/A';
         }
     }
 
@@ -341,12 +343,30 @@ $(document).ready(function () {
 
 
     // --------------------------------------------------------------------------------------------------------------
-    ///// Affichage du fond OpenStreetMap
+    ///// Affichage du fond de carte
 
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    // Open Street Map
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
+
+    
+    // Fond IGN
+    // const ign = L.tileLayer("https://data.geopf.fr/wmts?" +
+    //     "&REQUEST=GetTile"+
+    //     "&SERVICE=WMTS"+
+    //     "&VERSION=1.0.0" +
+    //     "&STYLE=normal" +
+    //     "&TILEMATRIXSET=PM" +
+    //     "&FORMAT=image/png"+
+    //     "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2"+ // Nom de la couche
+    //     "&TILEMATRIX={z}" +
+    //     "&TILEROW={y}" +
+    //     "&TILECOL={x}",{
+    //   maxZoom: 19,
+    //   attribution: '&copy; <a href="https://geoservices.ign.fr/">IGN</a>'
+    // }).addTo(map);
 
     // --------------------------------------------------------------------------------------------------------------
     /////  Couche bassin métropole (EPSG:4326)
@@ -701,7 +721,7 @@ $(document).ready(function () {
         filter: createFilter('demarches'),
         style: style_demarches,
         onEachFeature: onEachFeature_demarches,
-        attribution: 'FREDON Occitanie'
+        attribution: '<a href="https://www.fredonoccitanie.com/">FREDON Occitanie</a>'
     });
     $.getJSON('data/demarches.geojson', function(data){
         demarches.addData(data).addTo(map);
@@ -714,6 +734,7 @@ $(document).ready(function () {
     // ZP des AAC du bassin RMC
 
     const zp = L.geoJSON(null,{
+        filter: createFilter('zp'),
         style : {
             color:'rgb(144,187,70)',
             weight:2,
@@ -723,6 +744,7 @@ $(document).ready(function () {
     });
     $.getJSON('data/zpaac.geojson', function(data){
         zp.addData(data).addTo(map);
+        Ldata.zp = data ;
         nbCouchesChargees++;
     });
 
@@ -1270,13 +1292,17 @@ $(document).ready(function () {
         demarches.clearLayers(); // Effacer toutes les démarches
         demarches.addData(Ldata.demarches); // Ajouter de nouveau les données
 
+        // Miose à jour de la couche zp
+        zp.clearLayers();
+        zp.addData(Ldata.zp);
+
         // Mise à jour de la couche Captages
-        captages.clearLayers(); // Effacer toutes les démarches
-        captages.addData(Ldata.captages); // Ajouter de nouveau les données
+        captages.clearLayers();
+        captages.addData(Ldata.captages);
 
         // Mise à jour de la couche Membres
-        membres.clearLayers(); // Effacer toutes les démarches
-        membres.addData(Ldata.membres); // Ajouter de nouveau les données
+        membres.clearLayers();
+        membres.addData(Ldata.membres);
     }
 
     function generateButton(id,statut) {
