@@ -38,7 +38,7 @@
     </div>
 
     
-    <!-- Notice sur utilisation de la carte -->
+    <!-- Notice d'utilisation de la carte -->
     <div class="notice" id="notice">
         <div class="notice-content">
             <img id="fleche1"  src="assets/images/fleche1.png" alt="fleche1">
@@ -71,7 +71,7 @@
     <!-- Carte -->
     <div id="map"></div>
 
-    <!-- Panneau latéral droit (Démarches / captages)-->
+    <!-- Panneau latéral droit (Démarches / Captages) -->
     <button id="bt_demarches" class="openbtn openbtn-right"><img src="assets/images/demarche.png" alt="Infos Démarche(s)" class="logo_lateral"></button>
     <button id="bt_captages" class="openbtn openbtn-right"><img src="assets/images/goutte_menu.png" alt="Infos Captage(s)" class="logo_lateral"></button>
     <div id="panel-right">
@@ -102,7 +102,7 @@
         </div>
     </div>
 
-    <!-- Panneau latéral Gauche (Recherche / Légende)-->
+    <!-- Panneau latéral Gauche (Recherche / Légende et Filtres) -->
     <button id="bt_recherche" class="openbtn openbtn-left"><img src="assets/images/loupe.png" alt="Rechercher" class="logo_lateral"></button>
     <button id="bt_legende" class="openbtn openbtn-left"><img src="assets/images/oeil_grand.png" alt="Légende" class="logo_lateral"></button>
     <div id="panel-left">
@@ -121,7 +121,8 @@
                 </button>
             </div>
             <!-- Contenu -->
-             <fieldset id="onglet_recherche">
+             <!-- Onglet de recherche -->
+            <fieldset id="onglet_recherche">
                 <!-- Barre de recherche -->
                 <div class="search-container">
                     <img src="assets/images/loupe.png" alt="Rechercher" class="search-loupe">
@@ -129,8 +130,9 @@
                     <span id="clearSearch" class="clear-button">&times;</span>        
                     <div id="results"></div>
                 </div>
-             </fieldset>
-             <fieldset id="onglet_filtre">
+            </fieldset>
+            <!-- Onglet de légende et filtre -->
+            <fieldset id="onglet_filtre">
                 <div id="legend" class="container-left">
                     <span id="legend-titre" class="titre-container-left"> Légende </span>
                     <div class="legend-element" title="Captages publics dégradés par les pollutions diffuses, notamment pesticides et nitrates">
@@ -235,9 +237,7 @@
                         </li>
                     </ul>
                     <span class="custom-text"><i>Un membre anime une ou plusieurs démarches.</i></span>
-
                 </div>
-
              </fieldset>
         </div>
     </div>

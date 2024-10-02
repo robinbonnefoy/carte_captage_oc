@@ -2,7 +2,7 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------------------------------------------
     ///// Constantes et variables globales
 
-    const dateMAJ = 'Septembre 2024';
+    const dateMAJ = 'Octobre 2024';
 
     const mapContainer = document.getElementById("map"); // conteneur de la carte Leaflet
 
@@ -17,9 +17,6 @@ $(document).ready(function () {
 
     const leftPanel = document.getElementById("panel-left");
     const leftPanelWidth = "300px";
-    const openLeftButtons = document.querySelectorAll('.openbtn-left');
-    // const fieldset_recherche = document.getElementById('onglet_recherche');
-    // const fieldset_filtre = document.getElementById('onglet_filtre');
 
     const demarcheSearchFields = ['nom', 'structure_animation', 'animateur', 'departement']; // Champs de recherche pour la couche Démarche
     const captageSearchFields = ['nom', 'nom_demarche', 'maitre_ouvrage', 'nom_com']; // Champs de recherche pour la couche Captage
@@ -33,7 +30,7 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------------------------------------------
     ///// Méthodes
 
-    // Fonction pour basculer en mode plein écran
+    // Bascule en mode plein écran
     function toggleFullscreen() {
         let elem = document.documentElement;
         if (!document.fullscreenElement) {
@@ -59,22 +56,22 @@ $(document).ready(function () {
         }
     }
 
-    // Efface l'icone de chargement une fois la carte chargée
+    // Efface le loader une fois la carte chargée
 	function chargement_carte () {
         console.log('Carte chargée !');
 		setTimeout(() => {
             // Cache le loader et affiche la carte une fois le chargement terminé
             document.getElementById('loader').style.display = 'none';
-
-            // Afficher la notice
+            // Affiche la notice
             document.getElementById('notice').style.display = 'flex'; 
-            // Cacher la notice lors du clic sur la carte
+            // Cache la notice lors du clic sur la carte
             document.addEventListener('click', function () {
                 document.getElementById('notice').style.display = 'none';
             });
         }, 2000);               
 	};
 
+    // Ferme / Ouvre les panneaux latéraux
     function closePanel (panel,widthPanel,fctToggle) {
         const isOpen = panel.style.width === widthPanel;
         if(isOpen){
@@ -82,24 +79,119 @@ $(document).ready(function () {
         }
     }
 
-    /// Carte
-
-    // Ajuster la taille de la carte après une transition
-    function adjustMapSize() {
-        setTimeout(function() {
-            map.invalidateSize();
-        }, 600); // Ajuster en fonction de la durée de la transition
+    // Navigue entre les deux onglets du panneau panelId
+    function afficherOnglet(ongletId, panelId) {
+        // Masquer tous les fieldsets
+        let fieldsets = document.querySelectorAll(`#${panelId} fieldset`);
+        fieldsets.forEach(function(fieldset) {
+            fieldset.style.display = 'none';
+        });
+        // Afficher le fieldset correspondant à l'onglet sélectionné
+        document.getElementById(ongletId).style.display = 'block';
+        let boutons = document.querySelectorAll(`#onglets-${panelId} button`);
+        boutons.forEach(function(bouton) {
+            bouton.classList.remove('actif');
+        });
+        let boutonActif = document.querySelector(`#onglets-${panelId} button[data-onglet="${ongletId}"]`);
+        boutonActif.classList.add('actif');
     }
 
-    // Reset tous les démarcghes, captages et membres sélectionnés
+    /// Carte
 
+    // Désélectionne tous les démarches, captages et membres sélectionnés
     function resetAllHighlightSelected() {
         resetHighlightSelectedFeature(); // désélectionne la démarche
         resetHighlightSelectedMarker(); // désélectionne le captage
         resetHighlightSelectedMembre (); // déselectionne le membre
     }
 
-    /// Panneau latéral droite
+     // Filtrer
+
+    // Appelle la fonction de filtre avec 2 arguments
+    function createFilter(couche) {
+        return function(feature) {
+            return customFilter(feature, couche);
+        };
+    }
+
+    // Filtre les entités des couches 'demarches', 'zp' et 'captage'
+    function customFilter(feature, couche) {
+        if (!filterOn) {
+            // Si le filtre n'est pas activé, on retourne toutes les entités
+            return true;
+        }
+        // Si le filtre est activé
+        let statut_web ;
+        let membre_reseau ;
+        let bassin ;
+        if (couche === 'demarches') {
+            statut_web = feature.properties.statut_web;
+            membre_reseau = feature.properties.membre_reseau;
+            bassin = feature.properties.bassin_web;
+        } else {
+            // Couches 'captages' ou 'zp'
+            const jointureInfo = getStatutWebById(feature.properties.id_demarche_web); // Récupère le statut_web depuis la démarche jointe
+            statut_web = jointureInfo['statut_web'];
+            membre_reseau = jointureInfo['membre_reseau'];
+            bassin = jointureInfo['bassin'];
+        }
+        // Filtre sur l'état de l'animation
+        const isStatutMatch =
+            (filterDemarche['en_cours'] && (statut_web === 'en_cours' || statut_web === 'en_emergence')) ||
+            (filterDemarche['terminee'] && statut_web === 'terminee') ||
+            (filterDemarche['non_initie'] && statut_web === 'non_initie');
+        if (isStatutMatch) {
+            // si true ==> entitée qui doit être occultée
+            return false;
+        }
+        // Filtre sur les membres du réseau
+        const isMembreMatch = 
+            (filterDemarche['membre_reseau_RMC'] && membre_reseau === 'oui' && bassin === 'RMC') ||
+            (filterDemarche['membre_reseau_AG'] && membre_reseau === 'oui' && bassin === 'AG') ||
+            (!filterDemarche['membre_reseau_AG'] && !filterDemarche['membre_reseau_RMC']);
+        if (!isMembreMatch) {
+            // si true ==> entitée qui doit être affichée
+            return false;
+        }
+        return true
+    }
+
+    // Filtre les entités de la couche 'membres'
+    function customFilterMembre(feature) {
+        const legendMembre = document.getElementById('legend-membre');
+        // Vérifier si le filtrage par membre est désactivé
+        const isFilterDisabled = !filterDemarche['membre_reseau_AG'] && !filterDemarche['membre_reseau_RMC'];
+        if(isFilterDisabled) {
+            // si true, filtre désactivé, on n'affiche pas les membres
+            legendMembre.style.display = 'none'; // occultation de la légende
+            return false;
+        }
+        legendMembre.style.display = 'block'; // affichage de la légende
+        const bassin = feature.properties.bassin_web;
+        const isMembreMatch = 
+            (filterDemarche['membre_reseau_RMC'] && bassin === 'RMC') || 
+            (filterDemarche['membre_reseau_AG'] && bassin === 'AG') ||
+            (bassin === 'OC');
+        if (!isMembreMatch) {
+            // si true ==> entitée qui doit être affichée
+            return false;
+        }
+        return true;
+    }
+
+    // Ordonne l'affichage des couches
+    function orderingDisplayLayers () {
+        departement.bringToFront();
+        bassin_metropole.bringToFront();
+        demarches.bringToFront();
+        zp.bringToFront();
+        region.bringToFront();
+        captages.bringToFront();
+        membres.bringToFront();
+    }    
+    
+
+    /// Panneau latéral droit
 
     // Récupère le nom de domaine d'une url
     function extractDomainFromUrl (url) {
@@ -114,7 +206,7 @@ $(document).ready(function () {
         } 
     }
 
-    // Fonction pour ouvrir/fermer le panneau
+    // Ouvre / ferme le panneau de droite
     function toggleRightPanel() {
         if (rightPanel.style.width === '0px' || rightPanel.style.width === '') {
             // Ouvrir le panneau droit
@@ -138,28 +230,9 @@ $(document).ready(function () {
             // Réinitialiser les styles des démarches et captages sélectionnés
             resetAllHighlightSelected();
         }
-        // adjustMapSize();
     }
-
-    // Navigation entre les onglets
-    function afficherOnglet(ongletId, panelId) {
-        // Masquer tous les fieldsets
-        let fieldsets = document.querySelectorAll(`#${panelId} fieldset`);
-        fieldsets.forEach(function(fieldset) {
-            fieldset.style.display = 'none';
-        });
-        // Afficher le fieldset correspondant à l'onglet sélectionné
-        document.getElementById(ongletId).style.display = 'block';
-        let boutons = document.querySelectorAll(`#onglets-${panelId} button`);
-        boutons.forEach(function(bouton) {
-            bouton.classList.remove('actif');
-        });
-        let boutonActif = document.querySelector(`#onglets-${panelId} button[data-onglet="${ongletId}"]`);
-        boutonActif.classList.add('actif');
-    }
-    
-    ///// Panneau latéral droit
-    // Paramétrage des deux boutons latéraux
+   
+    // Paramétrage des deux boutons latéraux de droite
     document.getElementById('bt_demarches').addEventListener("click", () => {
         closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         toggleRightPanel();
@@ -206,82 +279,10 @@ $(document).ready(function () {
         }
     }
 
-    // Filtrer
-
-    // Appelle la fonction de filtre avec 2 arguments
-    function createFilter(couche) {
-        return function(feature) {
-            return customFilter(feature, couche);
-        };
-    }
-
-    // Fct filtre Démarche et Captages
-    function customFilter(feature, couche) {
-        if (!filterOn) {
-            // Si le filtre n'est pas activé, on retourne toutes les démarches
-            return true;
-        }
-        // Si le filtre est activé
-        let statut_web ;
-        let membre_reseau ;
-        let bassin ;
-        if (couche === 'demarches') {
-            statut_web = feature.properties.statut_web;
-            membre_reseau = feature.properties.membre_reseau;
-            bassin = feature.properties.bassin_web;
-        } else {
-            // Couche captages
-            const jointureInfo = getStatutWebById(feature.properties.id_demarche_web); // On récupére les données depuis la démarche jointe
-            statut_web = jointureInfo['statut_web'];
-            membre_reseau = jointureInfo['membre_reseau'];
-            bassin = jointureInfo['bassin'];
-        }
-        // Filtre sur l'état de l'animation
-        const isStatutMatch =
-            (filterDemarche['en_cours'] && (statut_web === 'en_cours' || statut_web === 'en_emergence')) ||
-            (filterDemarche['terminee'] && statut_web === 'terminee') ||
-            (filterDemarche['non_initie'] && statut_web === 'non_initie');
-        if (isStatutMatch) {
-            // si true ==> feature qui doit être occulté
-            return false;
-        }
-        // Filtre sur les membres du réseau
-        const isMembreMatch = 
-            (filterDemarche['membre_reseau_RMC'] && membre_reseau === 'oui' && bassin === 'RMC') ||
-            (filterDemarche['membre_reseau_AG'] && membre_reseau === 'oui' && bassin === 'AG') ||
-            (!filterDemarche['membre_reseau_AG'] && !filterDemarche['membre_reseau_RMC']);
-        if (!isMembreMatch) {
-            // si true ==> feature qui doit être affiché
-            return false;
-        }
-        return true
-    }
-
-    function customFilterMembre(feature) {
-        const legendMembre = document.getElementById('legend-membre');
-        // Vérifier si le filtrage par membre est désactivé
-        const isFilterDisabled = !filterDemarche['membre_reseau_AG'] && !filterDemarche['membre_reseau_RMC'];
-        if(isFilterDisabled) {
-            // si true, filtre désactivé, on n'affiche pas les membres
-            legendMembre.style.display = 'none'; // occultation de la légende
-            return false;
-        }
-        legendMembre.style.display = 'block'; // affichage de la légende
-        const bassin = feature.properties.bassin_web;
-        const isMembreMatch = 
-            (filterDemarche['membre_reseau_RMC'] && bassin === 'RMC') || 
-            (filterDemarche['membre_reseau_AG'] && bassin === 'AG') ||
-            (bassin === 'OC');
-        if (!isMembreMatch) {
-            // si true ==> feature qui doit être affiché
-            return false;
-        }
-        return true;
-    }
-
+   
     /// Panneau latéral de gauche
 
-    // Fonction pour ouvrir/fermer le panneau gauche
+    // Ouvre / ferme le panneau gauche
     function toggleLeftPanel() {
         if (leftPanel.style.width === '0px' || leftPanel.style.width === '') {
             // Ouvrir le panneau gauche
@@ -294,9 +295,9 @@ $(document).ready(function () {
             mapContainer.style.marginLeft = '0';
             mapContainer.style.width = "100%";
         }
-        // adjustMapSize();
     }
 
+    // Change les images des boutons onglets suivant l'onglet cliqué
     function toogleImageLeftPanel (){
         const activeOnglet = document.querySelector('#panel-left .bt_onglet.actif');
         const imgRecherche = document.getElementById('bt_onglet_recherche_img');
@@ -310,14 +311,7 @@ $(document).ready(function () {
         }
     }
 
-    // Paramétrage des deux boutons latéraux
-    // openLeftButtons.forEach(button => {
-    //     button.addEventListener("click", () => {
-    //         closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
-    //         toggleLeftPanel();
-    //     });
-    // });
-
+    // Paramétrage des boutons latéraux de gauche
     document.getElementById('bt_recherche').addEventListener("click", () => {
         closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
         toggleLeftPanel();
@@ -345,18 +339,6 @@ $(document).ready(function () {
     document.getElementById('bt_fermer-left').addEventListener("click", () => {
         toggleLeftPanel();
     });
-
-
-    // Ordonner l'affichage des couches
-    function orderingDisplayLayers () {
-        departement.bringToFront();
-        bassin_metropole.bringToFront();
-        demarches.bringToFront();
-        zp.bringToFront();
-        region.bringToFront();
-        captages.bringToFront();
-        membres.bringToFront();
-    }    
 
     // ------------------------------------------------------------------------------------------------------------
     ///// Création de l'objet carte 
@@ -467,10 +449,9 @@ $(document).ready(function () {
 
     /// Interactions sur les démarches (onEachFeature)
 
-    // Zoom sur l'entité polygonale sélectionnée
+    // Zoome sur l'entité polygonale sélectionnée
 	function zoomToFeature(layer) {
         map.fitBounds(layer.getBounds(),{maxZoom : 12});
-        // map.panBy([-300 / 2, 0], { animate: false }); // Décale la carte vers la gauche pour compenser le paneau latéral
     };
 
     // Action lors du survol avec la souris d'une entité polygonale
@@ -599,9 +580,14 @@ $(document).ready(function () {
                 for (var i = 0; i < ids.length; i++) {
                     // Isoler chaque ID
                     let id = ids[i]; // utiliser let car créé une nouvelle instance de id à chaque itération, ce qui permet au gestionnaire d'avoir le bon id et non le dernier comme avec le var
-                    insert += `
-                        <span class="demarche_associee" id="ASSOC_${id}"> ▹ ${getNomDemarcheAssociee(id)} </span>
-                    `;
+                    let nomDemarcheAssociee = getNomDemarcheAssociee(id);
+                    if (nomDemarcheAssociee === null) {
+                        insert += `<span class="popup_membre_demarches_horsOC"> ▹ ${getNomDemarcheAssocieeFromLdata(id)} (démarche non affichée) </span>`;
+                    } else {
+                        insert += `
+                            <span class="demarche_associee" id="ASSOC_${id}"> ▹ ${getNomDemarcheAssociee(id)} </span>
+                        `;
+                    }
                 }
             }
         }
@@ -609,7 +595,7 @@ $(document).ready(function () {
         return insert;
     }
 
-    // Remplir les infos de la démarche de la Partie "Démarche territoriale"
+    // Remplit les infos de la démarche de la Partie "Démarche territoriale"
     function fillDemarcheInfo(feature){
         fieldset_demarches.innerHTML = `
             <p class="popup_demarche_titre"> ${feature.properties.nom} </p>
@@ -658,7 +644,7 @@ $(document).ready(function () {
         demarchesAssocieesPopupClick(feature.properties.id_demarche_web_associe, 'ASSOC_');
     }
 
-    // Remplir la démarche à partir de l'id_demarche_web
+    // Remplit la démarche à partir de l'id_demarche_web
     function fillDemarcheFromIDWeb (idDemarcheWeb){
         demarches.eachLayer(function (layer) {
             // Si la démarche est associée au captage
@@ -671,7 +657,7 @@ $(document).ready(function () {
         });
     }
 
-    // Remplir l'onglet démarche quand pas de démarches associées au captage
+    // Remplit l'onglet démarche quand pas de démarches associées au captage
     function fillNoDemarche () {
         fieldset_demarches.innerHTML = `
             <div class="no_demarche"> 
@@ -683,7 +669,7 @@ $(document).ready(function () {
         `;
     }
         
-    // Réinitialiser le contenu du fieldset Démarche
+    // Réinitialise le contenu du fieldset Démarche
     function defautPopupDemarche() {
         fieldset_demarches.innerHTML = `
             <div class="no_demarche"> 
@@ -713,7 +699,6 @@ $(document).ready(function () {
     
     // Appliqué à chaque démarche
 	function onEachFeature_demarches(feature, layer) {
-
         layer.on({
             mouseover: highlightFeature,
             mouseout: resetHighlight,
@@ -763,15 +748,6 @@ $(document).ready(function () {
                 }
             }
         }
-        // Démarche terminées
-        // } else {
-        //     style = {
-        //         color:'rgb(164,165,164)',
-        //         weight:2,
-        //         fillColor: 'rgb(164,165,164)',
-        //         fillOpacity: 0.5,
-        //     }
-        // }
         return style;
     }
 
@@ -825,7 +801,7 @@ $(document).ready(function () {
         });
     }
 
-    // Marker du capatge par défault
+    // Marker du captage par défault
     function defaultMarker (layer) {
         var marker = layer;
         const icon = captageIcon(marker.feature.properties.type_captage);
@@ -881,7 +857,7 @@ $(document).ready(function () {
         selectedIdCaptageWeb = marker.feature.properties.id_captage_web;
     }
 
-    // Fonction de zoom lors du click sur un captage
+    // Zoome lors du click sur un captage
     function clickZoom(marker) {
         // map.setView(e.target.getLatLng(), 13);
         map.flyTo(marker.getLatLng(), 10, {
@@ -890,12 +866,12 @@ $(document).ready(function () {
         });
     }
 
-    // Réinitialiser le contenu du fieldset Captages
+    // Réinitialise le contenu du fieldset Captages
     function reinitializeCaptage () {
         fieldset_captages.innerHTML = '';
     }
 
-    // Réinitialiser le contenu du fieldset Captages
+    // Réinitialise le contenu du fieldset Captages
     function defaultPopupCaptage () {
         fieldset_captages.innerHTML = `
             <div class="no_demarche"> 
@@ -991,7 +967,7 @@ $(document).ready(function () {
         });
     }
 
-    // Changer le style du captage sélectionné
+    // Change le style du captage sélectionné
     function toggleCaptageDetails(element) {
         // partie popup
         var allCaptages = document.querySelectorAll('.captage-info');
@@ -1146,6 +1122,7 @@ $(document).ready(function () {
 
     }
 
+    // Récupère le nom de la démarche à partir de Ldata
     function getNomDemarcheAssocieeFromLdata(id){
         const demarches_features = Ldata.demarches.features;
         let nomDemarche = null; 
@@ -1331,13 +1308,13 @@ $(document).ready(function () {
 
         var results = [];
 
-        // Réinitialiser les suggestions si le champ est vide
+        // Réinitialise les suggestions si le champ est vide
         if (query === '') {
             resultsDiv.innerHTML = ''; // Efface les suggestions
             return;
         }
     
-        // Fonction pour rechercher dans une couche GeoJSON
+        // Rechercher dans une couche GeoJSON
         function searchInLayer(layer, layerType, searchFields) {
             layer.eachLayer(function(featureLayer) {
                 var properties = featureLayer.feature.properties;
@@ -1379,7 +1356,7 @@ $(document).ready(function () {
             } else if (result.type === 'captage') {
                 listItem.innerHTML = `${result.layer.feature.properties.nom} [${result.layer.feature.properties.nom_com} (${result.layer.feature.properties.insee_com})]`;
             }
-            // Appliquer une fonction différente selon le type
+            // Applique une fonction différente selon le type
             listItem.addEventListener('click', function() {
                 if (result.type === 'demarche') {
                     handleDemarcheClick(result.layer);
@@ -1388,10 +1365,10 @@ $(document).ready(function () {
                     handleCaptageClick(result.layer);
                     clickZoom(result.layer);
                 }
-                clearSearch(); // effacer les suggestions de recherche
+                clearSearch(); // efface les suggestions de recherche
             });
             listItem.classList.add("communResult");
-            // Donner la classe suivant type et ss_type
+            // Donne la classe suivant type et ss_type
             var styleResult ;
             if (result.type === 'demarche') {
                 if (result.ss_type === 'AAC' || result.ss_type === 'PAT'){
@@ -1413,7 +1390,7 @@ $(document).ready(function () {
         // console.log(results);
     });
 
-    // Effacer les suggestion de recherche
+    // Efface les suggestion de recherche
     function clearSearch () {
         var searchInput = document.getElementById('searchInput');
         searchInput.value = ''; // Vide le champ de recherche
@@ -1421,7 +1398,7 @@ $(document).ready(function () {
         searchInput.focus(); // Redonne le focus au champ de recherche
     }
 
-    // Fonction pour gérer le clic sur la croix
+    // Gère le clic sur la croix
     document.getElementById('clearSearch').addEventListener('click', function() {
         clearSearch();
     });
@@ -1501,7 +1478,7 @@ $(document).ready(function () {
     // --------------------------------------------------------------------------------------------------------------
     ///// CHARGEMENT
 
-    // Ordonner l'affichage des couches
+    // Ordonne l'affichage des couches au chargement
     function initialOrderingLayers () {
         return new Promise((resolve) => {
             orderingDisplayLayers();
@@ -1509,27 +1486,24 @@ $(document).ready(function () {
         });
     }
 
-    // Attendre que toutes les couches soit chargées
+    // Attend que toutes les couches soit chargées
     function verifChargement() {
         return new Promise((resolve) => {
         const interval = setInterval(() => {
             console.log(`Nb couches chargées : ${nbCouchesChargees} / 7`);
             if (nbCouchesChargees === 7) {
-            clearInterval(interval);
-            chargement_carte();
-            resolve();
+                clearInterval(interval);
+                chargement_carte();
+                resolve();
             }
         }, 50);
         });
     }
 
-    // Construction du filtre bonnes pratiques
     verifChargement()
     .then(() => initialOrderingLayers())
     .catch((error) => {
         console.error("Erreur au chargement des couches : ", error);
     });
-
-    // map.whenReady(chargement_carte); // Une fois la carte chargee, on efface l'icone de chargement
 
 }); // fin JQuery
