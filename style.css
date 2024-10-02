@@ -174,14 +174,22 @@ html, body {
 
 /* Message occutation couche captage */
 .layer-hidden-control {
+    position: absolute;
+    left: 50vw;
     background-color: white;
-    border: 1px solid rgb(105, 105, 105);
-    color:rgb(105, 105, 105);
+    border: 1px solid rgb(255, 136, 0);
+    color:rgb(255, 136, 0);
     border-radius: 5px;
     padding: 7px;
     font-size: 12px;
     opacity: 0.8;
+    width: 280px;
+    transform : translateX(-50%);
+    display: flex;
+    text-align: center;
+    justify-content : center
 }
+
 
 /* -- Deux boutons panneaux fermés */
 .openbtn {
@@ -235,7 +243,7 @@ padding : 0 3px 0 3px;
 }
 
 /* Contenu du panneau */
-#panel-content {
+.panel-content {
     padding: 0px;
     padding-top: 5px;
 }
@@ -471,7 +479,7 @@ a.demarche_link:active {
     transition: background-color 0.3s, color 0.3s; /* Transitions pour le survol */
 }
 .demarche_associee:hover {
-    color: #004152; /* Couleur du texte au survol */
+    color: #ff7300; /* Couleur du texte au survol */
 }
 
 /* Popup Captage */
@@ -660,6 +668,33 @@ a.captage_link:active {
     cursor: pointer;
 }
 
+#panel-left fieldset{
+    background: #007c8e;
+    /* border: 2px solid white; */
+}
+
+#panel-left .bt_onglet{
+    /* background: #007c8e; */
+    border-radius : 10px;
+    background-color: #007c8e;
+    border: white 2px solid;
+    margin: 0px 2px;
+}
+#panel-left .bt_onglet .titre_onglet{
+    color: white;
+    font-weight: 300;
+}
+
+#panel-left .bt_onglet.actif{
+    background: white;
+    border: none;
+    
+}
+#panel-left .bt_onglet.actif .titre_onglet{
+    color: #007c8e;
+    font-weight: 400;
+}
+
 #bt_fermer-right {
     margin-left : 5px;
     background-color: transparent;
@@ -717,7 +752,7 @@ input:focus {
 .clear-button {
     position: absolute;
     right: 15px; /* Positionne la croix à droite */
-    top: 39px; /* Centrage vertical */
+    top: 103px; /* Centrage vertical */
     cursor: pointer;
     font-size: 18px;
     color: #007c8e; /* Couleur de la croix */
@@ -727,7 +762,7 @@ input:focus {
 .search-loupe{
     position: absolute;
     left: 10px; /* Positionne la croix à droite */
-    top: 39px; /* Centrage vertical */
+    top: 102px; /* Centrage vertical */
     width: 25px;
 }
 
@@ -907,5 +942,10 @@ label {
 
 .item {
   display: none; /* ne pas afficher les chekcbox originales */
+}
+
+.item_evidence{
+    font-weight: 1000;
+    color : #007c8e;
 }
 

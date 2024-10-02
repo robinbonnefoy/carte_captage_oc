@@ -2,6 +2,8 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------------------------------------------
     ///// Constantes et variables globales
 
+    const dateMAJ = 'Septembre 2024';
+
     const mapContainer = document.getElementById("map"); // conteneur de la carte Leaflet
 
     const rightPanel = document.getElementById("panel-right"); // panneau latéral de droite
@@ -9,12 +11,15 @@ $(document).ready(function () {
     const openButtons = document.querySelectorAll('.openbtn-right'); // bouton latéraux de droite (démarche et captages)
     const fieldset_captages = document.getElementById('onglet_captages'); // id du fieldset de l'onglet Captages du panneau latéral de droite
     const fieldset_demarches = document.getElementById('onglet_demarches'); // id du fieldset de l'onglet Démarches du panneau latéral de droite
-    var selectedIdDemarcheWeb = null ; // id_demarche_web de la Démarche sélectionnée
+    var LselectedIdDemarcheWeb = [] ; // liste id_demarche_web de la Démarche sélectionnée
     var selectedIdCaptageWeb = null ; // id_captage_web du captage sélectionnée
+    var LselectedIdMembreWeb = [] ; // liste id_membre_web des membres sélectionnés
 
     const leftPanel = document.getElementById("panel-left");
     const leftPanelWidth = "300px";
     const openLeftButtons = document.querySelectorAll('.openbtn-left');
+    // const fieldset_recherche = document.getElementById('onglet_recherche');
+    // const fieldset_filtre = document.getElementById('onglet_filtre');
 
     const demarcheSearchFields = ['nom', 'structure_animation', 'animateur', 'departement']; // Champs de recherche pour la couche Démarche
     const captageSearchFields = ['nom', 'nom_demarche', 'maitre_ouvrage', 'nom_com']; // Champs de recherche pour la couche Captage
@@ -86,6 +91,14 @@ $(document).ready(function () {
         }, 600); // Ajuster en fonction de la durée de la transition
     }
 
+    // Reset tous les démarcghes, captages et membres sélectionnés
+
+    function resetAllHighlightSelected() {
+        resetHighlightSelectedFeature(); // désélectionne la démarche
+        resetHighlightSelectedMarker(); // désélectionne le captage
+        resetHighlightSelectedMembre (); // déselectionne le membre
+    }
+
     /// Panneau latéral droite
 
     // Récupère le nom de domaine d'une url
@@ -119,43 +132,43 @@ $(document).ready(function () {
             openButtons.forEach(button => {
                 button.style.display = 'block';
             });
-            // Réinitialiser les styles des démarches et captages sélectionnés
-            resetHighlightSelectedFeature();
-            resetHighlightSelectedMarker();
             // Réinitialiser les popups
             defautPopupDemarche();
             defaultPopupCaptage();
+            // Réinitialiser les styles des démarches et captages sélectionnés
+            resetAllHighlightSelected();
         }
         // adjustMapSize();
     }
 
     // Navigation entre les onglets
-    function afficherOnglet(ongletId) {
+    function afficherOnglet(ongletId, panelId) {
         // Masquer tous les fieldsets
-        var fieldsets = document.querySelectorAll('fieldset');
+        let fieldsets = document.querySelectorAll(`#${panelId} fieldset`);
         fieldsets.forEach(function(fieldset) {
             fieldset.style.display = 'none';
         });
         // Afficher le fieldset correspondant à l'onglet sélectionné
         document.getElementById(ongletId).style.display = 'block';
-        var boutons = document.querySelectorAll('#onglets button');
+        let boutons = document.querySelectorAll(`#onglets-${panelId} button`);
         boutons.forEach(function(bouton) {
             bouton.classList.remove('actif');
         });
-        var boutonActif = document.querySelector('#onglets button[data-onglet="' + ongletId + '"]');
+        let boutonActif = document.querySelector(`#onglets-${panelId} button[data-onglet="${ongletId}"]`);
         boutonActif.classList.add('actif');
     }
-
+    
+    ///// Panneau latéral droit
     // Paramétrage des deux boutons latéraux
     document.getElementById('bt_demarches').addEventListener("click", () => {
         closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         toggleRightPanel();
-        afficherOnglet('onglet_demarches');
+        afficherOnglet('onglet_demarches','panel-right');
     });
     document.getElementById('bt_captages').addEventListener("click", () => {
         closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         toggleRightPanel();
-        afficherOnglet('onglet_captages');
+        afficherOnglet('onglet_captages','panel-right');
     });
 
     // Paramétrage du bouton pour fermer le panneau de droite
@@ -165,10 +178,10 @@ $(document).ready(function () {
 
     // Paramétrage des bouton Onglets
     document.getElementById('bt_onglet_demarches').addEventListener("click", () => {
-        afficherOnglet('onglet_demarches');
+        afficherOnglet('onglet_demarches','panel-right');
     });
     document.getElementById('bt_onglet_captages').addEventListener("click", () => {
-        afficherOnglet('onglet_captages');
+        afficherOnglet('onglet_captages','panel-right');
     });
 
     // Programme de dépliement et rabbatage de la partie Plus d'information du popup démarches / captages
@@ -185,7 +198,7 @@ $(document).ready(function () {
     function isValidUrl(string) {
         try {
             new URL(string);
-            console.log(string);
+            // console.log(string);
             return `<a href="${string}"  target="_blank" class="captage_link"> ${extractDomainFromUrl(string)}</a>`;
         } catch (err) {
             // console.log(err);
@@ -215,7 +228,7 @@ $(document).ready(function () {
         if (couche === 'demarches') {
             statut_web = feature.properties.statut_web;
             membre_reseau = feature.properties.membre_reseau;
-            bassin = feature.properties.bassin;
+            bassin = feature.properties.bassin_web;
         } else {
             // Couche captages
             const jointureInfo = getStatutWebById(feature.properties.id_demarche_web); // On récupére les données depuis la démarche jointe
@@ -257,7 +270,8 @@ $(document).ready(function () {
         const bassin = feature.properties.bassin_web;
         const isMembreMatch = 
             (filterDemarche['membre_reseau_RMC'] && bassin === 'RMC') || 
-            (filterDemarche['membre_reseau_AG'] && bassin === 'AG');
+            (filterDemarche['membre_reseau_AG'] && bassin === 'AG') ||
+            (bassin === 'OC');
         if (!isMembreMatch) {
             // si true ==> feature qui doit être affiché
             return false;
@@ -283,15 +297,51 @@ $(document).ready(function () {
         // adjustMapSize();
     }
 
+    function toogleImageLeftPanel (){
+        const activeOnglet = document.querySelector('#panel-left .bt_onglet.actif');
+        const imgRecherche = document.getElementById('bt_onglet_recherche_img');
+        const imgFiltre = document.getElementById('bt_onglet_filtre_img');
+        if (activeOnglet.id === 'bt_onglet_recherche'){
+            imgRecherche.src = 'assets/images/loupe.png';
+            imgFiltre.src = 'assets/images/oeil_grand_blanc.png'
+        } else {
+            imgRecherche.src = 'assets/images/loupe_blanc.png';
+            imgFiltre.src = 'assets/images/oeil_grand.png' 
+        }
+    }
+
     // Paramétrage des deux boutons latéraux
-    openLeftButtons.forEach(button => {
-        button.addEventListener("click", () => {
-            toggleLeftPanel('open');
-            closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
-        });
+    // openLeftButtons.forEach(button => {
+    //     button.addEventListener("click", () => {
+    //         closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
+    //         toggleLeftPanel();
+    //     });
+    // });
+
+    document.getElementById('bt_recherche').addEventListener("click", () => {
+        closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
+        toggleLeftPanel();
+        afficherOnglet('onglet_recherche','panel-left');
+        toogleImageLeftPanel();
+    });
+    document.getElementById('bt_legende').addEventListener("click", () => {
+        closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
+        toggleLeftPanel();
+        afficherOnglet('onglet_filtre','panel-left');
+        toogleImageLeftPanel();
     });
 
-    // Paramétrage du bouton pour fermer le panneau de droite
+    // Paramétrage des bouton Onglets
+    document.getElementById('bt_onglet_recherche').addEventListener("click", () => {
+        afficherOnglet('onglet_recherche','panel-left');
+        toogleImageLeftPanel();
+    });
+    document.getElementById('bt_onglet_filtre').addEventListener("click", () => {
+        afficherOnglet('onglet_filtre','panel-left');
+        toogleImageLeftPanel();
+    });
+
+    // Paramétrage du bouton pour fermer le panneau de gauche
     document.getElementById('bt_fermer-left').addEventListener("click", () => {
         toggleLeftPanel();
     });
@@ -420,7 +470,7 @@ $(document).ready(function () {
     // Zoom sur l'entité polygonale sélectionnée
 	function zoomToFeature(layer) {
         map.fitBounds(layer.getBounds(),{maxZoom : 12});
-        map.panBy([-300 / 2, 0], { animate: false }); // Décale la carte vers la gauche pour compenser le paneau latéral
+        // map.panBy([-300 / 2, 0], { animate: false }); // Décale la carte vers la gauche pour compenser le paneau latéral
     };
 
     // Action lors du survol avec la souris d'une entité polygonale
@@ -438,7 +488,7 @@ $(document).ready(function () {
 	function resetHighlight(e) {
         var layer = e.target ;
         var idDemarcheWeb = layer.feature.properties.id_demarche_web ;
-        if (idDemarcheWeb === selectedIdDemarcheWeb) {
+        if (LselectedIdDemarcheWeb.includes(idDemarcheWeb)) {
             // si la démarche est celle qui est sélectionnée, on applique la mise en forme spécifique de la démarche sélectionnée
             highlightSelectedFeature(e.target);
         } else {
@@ -449,7 +499,9 @@ $(document).ready(function () {
 
     // Mise en forme de la démarche sélectionnée
     function highlightSelectedFeature(layer) {
-        selectedIdDemarcheWeb = layer.feature.properties.id_demarche_web ;
+        if (!LselectedIdDemarcheWeb.includes(layer.feature.properties.id_demarche_web)){
+            LselectedIdDemarcheWeb.push(layer.feature.properties.id_demarche_web) ;
+        }
         layer.setStyle({
             weight: 5,
             color: '#F868CB',
@@ -465,15 +517,15 @@ $(document).ready(function () {
 
     // Réinitialise le style de la démarche sélectionnée 
     function resetHighlightSelectedFeature (){
-        if (!!selectedIdDemarcheWeb){
+        if (LselectedIdDemarcheWeb.length > 0){
         // si une démarche est sélectionnée
             demarches.eachLayer(function (layer) {
                 // Si la démarche est sélectionnée
-                if (layer.feature.properties.id_demarche_web === selectedIdDemarcheWeb) {
+                if (LselectedIdDemarcheWeb.includes(layer.feature.properties.id_demarche_web)) {
                     demarches.resetStyle(layer);
                 }
             });
-            selectedIdDemarcheWeb = null; 
+            LselectedIdDemarcheWeb = []; 
         }
     }
 
@@ -497,10 +549,9 @@ $(document).ready(function () {
         demarches.eachLayer(function (layer) {
             // Si la démarche est associée au captage
             if (layer.feature.properties.id_demarche_web === idDemarcheWeb) {
-                resetHighlightSelectedMarker(); // désélectionne le captage
-                resetHighlightSelectedFeature(); // réinitialisation du style d'une démarche sélectionnée
+                resetAllHighlightSelected(); // réinitiliser toutes les sélections
                 highlightSelectedFeature(layer); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
-                zoomToFeature(layer);
+                // zoomToFeature(layer);
                 showDemarcheInfo(layer.feature);
                 reinitializeCaptage(); // Réinitialiser les infos de la partie "Captages associé(s)"
                 fillAllCaptagesInfo(layer.feature.properties.id_demarche_web); // Complète les infos de la partie "Captages associé(s)"
@@ -509,23 +560,26 @@ $(document).ready(function () {
     }
 
     function demarchesAssocieesPopupClick (str, prefixe){
-        // Si il y a une / des démarches associées
-        if (str.substring(0,4) === 'DEM_'){
-            // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
-            var ids = str.split(",");
-            // Parcourir chaque ID dans le tableau avec une boucle for
-            for (var i = 0; i < ids.length; i++) {
-                // Isoler chaque ID
-                let id = ids[i]; // utiliser let car créé une nouvelle instance de id à chaque itération, ce qui permet au gestionnaire d'avoir le bon id et non le dernier comme avec le var
-                const idContainer= prefixe + id;
-                // Paramétrage des bouton Onglets
-                const element = document.getElementById(idContainer);
-                if (element) {
-                    // si le conteneur existe bien
-                    element.addEventListener("click", () => {
-                        openDemarcheAssociee(id);
-                        map.closePopup(); // fermeture du popup membre
-                    });
+        if (str) {
+            // Si str n'est pas nul
+            if (str.substring(0,4) === 'DEM_'){
+            // Si il y a une / des démarches associées
+                // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
+                var ids = str.split(",");
+                // Parcourir chaque ID dans le tableau avec une boucle for
+                for (var i = 0; i < ids.length; i++) {
+                    // Isoler chaque ID
+                    let id = ids[i]; // utiliser let car créé une nouvelle instance de id à chaque itération, ce qui permet au gestionnaire d'avoir le bon id et non le dernier comme avec le var
+                    const idContainer= prefixe + id;
+                    // Paramétrage des bouton Onglets
+                    const element = document.getElementById(idContainer);
+                    if (element) {
+                        // si le conteneur existe bien
+                        element.addEventListener("click", () => {
+                            map.closePopup(); // fermeture du popup membre
+                            openDemarcheAssociee(id);
+                        });
+                    }
                 }
             }
         }
@@ -534,20 +588,24 @@ $(document).ready(function () {
     // Ajoute une partie dans le popup Démarche sur les démarches associées
     function demarchesAssocieesPopup(str){
         var insert = '';
-        // Si il y a une / des démarches associées
-        if (str.substring(0,4) === 'DEM_'){
-            insert += `<span class="popup_demarche_partie"> Démarche(s) associée(s)  </span>`;
-            // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
-            var ids = str.split(",");
-            // Parcourir chaque ID dans le tableau avec une boucle for
-            for (var i = 0; i < ids.length; i++) {
-                // Isoler chaque ID
-                let id = ids[i]; // utiliser let car créé une nouvelle instance de id à chaque itération, ce qui permet au gestionnaire d'avoir le bon id et non le dernier comme avec le var
-                insert += `
-                    <span class="demarche_associee" id="ASSOC_${id}"> ${getNomDemarcheAssociee(id)} </span>
-                `;
+        if (str) {
+        // Si str n'est pas nul
+            if (str.substring(0,4) === 'DEM_'){
+            // Si il y a une / des démarches associées
+                insert += `<span class="popup_demarche_partie"> Démarche(s) associée(s)  </span>`;
+                // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
+                var ids = str.split(",");
+                // Parcourir chaque ID dans le tableau avec une boucle for
+                for (var i = 0; i < ids.length; i++) {
+                    // Isoler chaque ID
+                    let id = ids[i]; // utiliser let car créé une nouvelle instance de id à chaque itération, ce qui permet au gestionnaire d'avoir le bon id et non le dernier comme avec le var
+                    insert += `
+                        <span class="demarche_associee" id="ASSOC_${id}"> ▹ ${getNomDemarcheAssociee(id)} </span>
+                    `;
+                }
             }
         }
+
         return insert;
     }
 
@@ -638,19 +696,19 @@ $(document).ready(function () {
     function showDemarcheInfo(feature) {
         closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         openPanel(); // Ouvre le panneau latéral si nécessaire
-        afficherOnglet('onglet_demarches'); // ouvrir l'onglet Dméraches du panneau
+        afficherOnglet('onglet_demarches','panel-right'); // ouvrir l'onglet Dméraches du panneau
         fillDemarcheInfo(feature);
     }
 
     // Au clic sur une démarche
     function handleDemarcheClick(layer){
-        resetHighlightSelectedMarker(); // désélectionne le captage
-        resetHighlightSelectedFeature(); // réinitialisation du style d'une démarche sélectionnée
+        resetAllHighlightSelected(); // réinitiliser toutes les sélections
         highlightSelectedFeature(layer); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
-        zoomToFeature(layer);
+        // zoomToFeature(layer);
         showDemarcheInfo(layer.feature);
         reinitializeCaptage(); // Réinitialiser les infos de la partie "Captages associé(s)"
         fillAllCaptagesInfo(layer.feature.properties.id_demarche_web); // Complète les infos de la partie "Captages associé(s)"
+        selectedMembreFromIdDemarche(layer.feature.properties.id_demarche_web); // on sélectionne les membres associés
     }
     
     // Appliqué à chaque démarche
@@ -721,7 +779,7 @@ $(document).ready(function () {
         filter: createFilter('demarches'),
         style: style_demarches,
         onEachFeature: onEachFeature_demarches,
-        attribution: '<a href="https://www.fredonoccitanie.com/">FREDON Occitanie</a>'
+        attribution: `<a href="https://www.fredonoccitanie.com/">FREDON Occitanie</a>, Mise à jour en ${dateMAJ}`
     });
     $.getJSON('data/demarches.geojson', function(data){
         demarches.addData(data).addTo(map);
@@ -825,7 +883,7 @@ $(document).ready(function () {
 
     // Fonction de zoom lors du click sur un captage
     function clickZoom(marker) {
-        //map.setView(e.target.getLatLng(), 13);
+        // map.setView(e.target.getLatLng(), 13);
         map.flyTo(marker.getLatLng(), 10, {
             duration: 0.5,  // Durée du vol en secondes
             maxZoom: 10     // Niveau de zoom maximal
@@ -928,7 +986,7 @@ $(document).ready(function () {
             if (layer.feature.properties.id_captage_web === idCaptageWeb) {
                 // On sélectionne le captage
                 highlightSelectedMarker(layer);
-                clickZoom(layer);
+                // clickZoom(layer);
             }
         });
     }
@@ -960,7 +1018,7 @@ $(document).ready(function () {
         var idCaptageWeb = feature.properties.id_captage_web;
         closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         openPanel(); // Ouvre le panneau latéral si nécessaire
-        afficherOnglet('onglet_captages'); // ouvrir l'onglet Dméraches du panneau
+        afficherOnglet('onglet_captages','panel-right'); // ouvrir l'onglet Dméraches du panneau
         reinitializeCaptage(); // Réinitaliser le contenu du fieldset captage
         if (idDemarcheWeb === 'non') {
             // pas de démarche associée, on affiche les infos du captage
@@ -976,9 +1034,9 @@ $(document).ready(function () {
 
     // Au clic sur un captage
     function handleCaptageClick (layer) {
-        clickZoom(layer);
-        resetHighlightSelectedFeature(); // désélectionne la démarche
-        resetHighlightSelectedMarker(); // désélectionne le captage
+        // clickZoom(layer);
+        resetAllHighlightSelected(); // réinitiliser toutes les sélections
+        resetHighlightSelectedMembre (); // déselectionne le membre
         showPopupCaptage(layer.feature);
         highlightSelectedMarker(layer); // sélectionne le captage
     }
@@ -1022,7 +1080,7 @@ $(document).ready(function () {
     // Message d'occultation de la couche
     var LayerHiddenControl = L.Control.extend({
         onAdd: function(map) {
-            var div = L.DomUtil.create('div', 'layer-hidden-control');
+            const div = L.DomUtil.create('div', 'layer-hidden-control');
             div.innerHTML = "Captages occultés. Dézoomer pour les visualiser.";
             return div;
         },
@@ -1032,7 +1090,7 @@ $(document).ready(function () {
     });
 
     // Ajouter le contrôle à la carte (mais il sera visible seulement quand nécessaire)
-    var layerHiddenControl = new LayerHiddenControl({ position: 'bottomright' });
+    var layerHiddenControl = new LayerHiddenControl({position: 'topleft'});
 
     $.getJSON('data/captages.geojson', function(data){
         captages.addData(data).addTo(map);
@@ -1046,6 +1104,47 @@ $(document).ready(function () {
 
     // --------------------------------------------------------------------------------------------------------------
     ///// Membres (EPSG:4326)
+
+    // Afficher le nombre de membres par secteur
+    function updateNbMembres() {
+        let nb_ag = 0 ;
+        let nb_rmc = 0;
+        const agCtContainer = document.getElementById('ct_ag');
+        const rmcCtContainer = document.getElementById('ct_rmc');
+        const membres_features = Ldata.membres.features;
+        membres_features.forEach(function(feature){
+            if (feature.properties.bassin_web === 'AG'){
+                nb_ag++ ;
+            } else if (feature.properties.bassin_web === 'RMC') {
+                nb_rmc++ ;
+            } else if (feature.properties.bassin_web === 'OC') {
+                nb_ag++ ;
+                nb_rmc++ ;
+            }
+        });
+        agCtContainer.innerHTML = `[${nb_ag}]`;
+        rmcCtContainer.innerHTML = `[${nb_rmc}]`;
+    }
+
+    // Affiche en rose les démarches associées aux membres
+    function hilightDemarcheAssocieeMembre(str) {
+        if (str.substring(0,4) === 'DEM_'){
+            let ids = str.split(",");
+            let selectedLayers = []; // liste pour stocker les démarches associées
+            demarches.eachLayer(function (layer) {
+                if (ids.includes(layer.feature.properties.id_demarche_web)){
+                    highlightSelectedFeature(layer); // surligner en rose la démarche
+                    selectedLayers.push(layer); // ajouter la démarche
+                }
+            });
+            // Si des entités sont sélectionnées, zoomer sur l'emprise
+            if (selectedLayers.length > 0) {
+                let group = new L.featureGroup(selectedLayers);
+                map.fitBounds(group.getBounds(),{maxZoom : 12}); // Zoom sur l'emprise des entités sélectionnées
+            }
+        }
+
+    }
 
     function getNomDemarcheAssocieeFromLdata(id){
         const demarches_features = Ldata.demarches.features;
@@ -1071,28 +1170,37 @@ $(document).ready(function () {
                 let id = ids[i]; // utiliser let car créé une nouvelle instance de id à chaque itération, ce qui permet au gestionnaire d'avoir le bon id et non le dernier comme avec le var
                 let nomDemarcheAssociee = getNomDemarcheAssociee(id);
                 if (nomDemarcheAssociee === null) {
-                    insert += `<span class="popup_membre_demarches_horsOC"> ${getNomDemarcheAssocieeFromLdata(id)} (démarche occultée par le filtre sur Animations) </span>`;
+                    insert += `<span class="popup_membre_demarches_horsOC"> ▹ ${getNomDemarcheAssocieeFromLdata(id)} (démarche non affichée) </span>`;
                 } else {
                     insert += `
-                        <span class="demarche_associee" id="ASSOC2_${id}"> ${nomDemarcheAssociee} </span>
+                        <span class="demarche_associee" id="ASSOC2_${id}"> ▹ ${nomDemarcheAssociee} </span>
                     `;
                 }
             }
         } else {
-            insert += `<span class="popup_membre_demarches_horsOC"> ${str} </span>`;
+            insert += `<span class="popup_membre_demarches_horsOC"> ▹ ${str} </span>`;
         }
         return insert;
     }
 
+    // Désélectionner tous à la fermeture du popup
+    map.on('popupclose', function (e) {
+        // A la fermeture du popup
+        resetAllHighlightSelected();
+    });
+
     function getMembreIconPath (type_membre) {
-        var path ;
+        let path ;
         if (type_membre === 'collectivite') {
             path = 'assets/images/bonhomme_o.png';
         } else if (type_membre === 'syndicat') {
             path = 'assets/images/bonhomme_b.png';
-        } else {
+        } else if (type_membre === 'conseil') {
             // conseil
             path = 'assets/images/bonhomme_v.png';
+        } else {
+            // cooperative
+            path = 'assets/images/bonhomme_vc.png';
         }
         return path ;
     }
@@ -1126,7 +1234,51 @@ $(document).ready(function () {
     }
     
     function resetHighlightMembre(e) {
-        defaultMembre(e.target);
+        let idMembre = e.target.feature.properties.id_membre_web;
+        if (LselectedIdMembreWeb.includes(idMembre)) {
+            highlightSelectedMembre(e.target);
+        } else {
+            defaultMembre(e.target);
+        }
+    }
+
+    // Réinitialise le style de l'entité sélectionnée 
+    function resetHighlightSelectedMembre (){
+        if (LselectedIdMembreWeb.length > 0){
+        // si une membre est sélectionnée
+            membres.eachLayer(function (layer) {
+                // Si le membre est sélectionné
+                if (LselectedIdMembreWeb.includes(layer.feature.properties.id_membre_web)) {
+                    defaultMembre(layer); // style par défaut
+                }
+            });
+            LselectedIdMembreWeb = []; 
+        }
+    }
+
+    // Selection les membres à partir de l'id_demarche_web
+    function selectedMembreFromIdDemarche (idDemarcheWeb){
+        membres.eachLayer(function (layer) {
+            let LIdDemarcheAssociees = layer.feature.properties.id_demarche_web_associees;
+            if (LIdDemarcheAssociees.includes(idDemarcheWeb)) {
+                // Si la démarche est animée par cet animateur
+                highlightSelectedMembre(layer); // on sélectionne le membre
+            }
+        });
+    }
+    
+    // Mise en forme du membre sélectionné
+    function highlightSelectedMembre(marker) {
+        if (!LselectedIdMembreWeb.includes(marker.feature.properties.id_membre_web)){
+            LselectedIdMembreWeb.push(marker.feature.properties.id_membre_web);
+        }
+        const icon = new L.Icon({
+            iconUrl: 'assets/images/bonhomme_r.png',
+            iconSize: [30, 56],
+            iconAnchor: [15, 28], // permet de garder l'icone centré
+            popupAnchor: [0, -18]
+         });
+        marker.setIcon(icon);
     }
 
     function onEachFeature_membre(feature, layer){
@@ -1137,6 +1289,7 @@ $(document).ready(function () {
             mouseout : resetHighlightMembre,
             click: function (e) {
                 layer.unbindPopup(); // permet de délier le popup --> évite les bugs de non affichage du popup quand on intéroge plusieurs à la suite
+                resetAllHighlightSelected(); // réinitiliser toutes les sélections
                 const element = e.target;
                 const idDemarchesWebAssociees = feature.properties.id_demarche_web_associees;
                 var popupContent = `
@@ -1144,9 +1297,13 @@ $(document).ready(function () {
                 ${demarchesAssocieesPopupMembre(idDemarchesWebAssociees)}
                 `;
                 // Associer le popup à la couche et l'ouvrir immédiatement
-                element.bindPopup(popupContent).openPopup();
+                element.bindPopup(popupContent, { maxHeight: 250 }).openPopup();
                 // Ajouter les actions clic sur les démarches associées
                 demarchesAssocieesPopupClick(idDemarchesWebAssociees, 'ASSOC2_');
+                // Surligner le membre
+                highlightSelectedMembre(element);
+                // Mettre en surbrillance les démarches associées au membreles autres démarches
+                hilightDemarcheAssocieeMembre(idDemarchesWebAssociees);
             }
         });
     }
@@ -1161,6 +1318,7 @@ $(document).ready(function () {
     $.getJSON('data/membres.geojson', function(data){
         membres.addData(data).addTo(map);
         Ldata.membres = data;
+        updateNbMembres(); // mettre à jour les compteurs nombre de membres
         nbCouchesChargees++;
     });
 
@@ -1215,14 +1373,20 @@ $(document).ready(function () {
     
         results.forEach(function(result) {
             var listItem = document.createElement('div');
-            listItem.innerHTML = result.layer.feature.properties.nom;  // Modifier en fonction de ce que vous voulez afficher
-            // listItem.style.cursor = 'pointer';
+            // Nom affiché dans le résultat de la recherche
+            if (result.type === 'demarche') {
+                listItem.innerHTML = `${result.layer.feature.properties.nom} [${result.layer.feature.properties.departement}]`;
+            } else if (result.type === 'captage') {
+                listItem.innerHTML = `${result.layer.feature.properties.nom} [${result.layer.feature.properties.nom_com} (${result.layer.feature.properties.insee_com})]`;
+            }
             // Appliquer une fonction différente selon le type
             listItem.addEventListener('click', function() {
                 if (result.type === 'demarche') {
                     handleDemarcheClick(result.layer);
+                    zoomToFeature(result.layer);
                 } else if (result.type === 'captage') {
                     handleCaptageClick(result.layer);
+                    clickZoom(result.layer);
                 }
                 clearSearch(); // effacer les suggestions de recherche
             });
@@ -1273,7 +1437,7 @@ $(document).ready(function () {
         });
         // Retourner le statut_web si l'élément est trouvé, sinon retourner null
         if (elementTrouve) {
-            return {'statut_web' : elementTrouve.properties.statut_web, 'membre_reseau' : elementTrouve.properties.membre_reseau, 'bassin' : elementTrouve.properties.bassin};
+            return {'statut_web' : elementTrouve.properties.statut_web, 'membre_reseau' : elementTrouve.properties.membre_reseau, 'bassin' : elementTrouve.properties.bassin_web};
         } else {
             return {'statut_web' : 'non_initie', 'membre_reseau' : 'non', 'bassin' : 'N/A'}; // Ou une valeur par défaut si l'ID n'est pas trouvé
         }
