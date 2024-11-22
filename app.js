@@ -2,7 +2,7 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------------------------------------------
     ///// Constantes et variables globales
 
-    const dateMAJ = 'Octobre 2024';
+    const dateMAJ = 'Novembre 2024';
 
     const mapContainer = document.getElementById("map"); // conteneur de la carte Leaflet
 
@@ -23,7 +23,7 @@ $(document).ready(function () {
 
     var Ldata = {}; // Données de l'ensemble des structures
     var filterOn = false; // Etat général du filtre des démarches (activé ou non)
-    var filterDemarche = {'en_cours':false, 'terminee':false, 'non_initie':false, 'membre_reseau_AG': false, 'membre_reseau_RMC': false}; // Filtre des démarches
+    var filterDemarche = {'en_emergence':false, 'en_cours':false, 'terminee':false, 'non_initie':false, 'membre_reseau_AG': false, 'membre_reseau_RMC': false}; // Filtre des démarches
 
     let nbCouchesChargees = 0 ; // Nb couches chargées
 
@@ -71,7 +71,8 @@ $(document).ready(function () {
         }, 2000);               
 	};
 
-    // Ferme / Ouvre les panneaux latéraux
+   
+    // Ferme le panneau latéral si ouvert
     function closePanel (panel,widthPanel,fctToggle) {
         const isOpen = panel.style.width === widthPanel;
         if(isOpen){
@@ -137,7 +138,8 @@ $(document).ready(function () {
         }
         // Filtre sur l'état de l'animation
         const isStatutMatch =
-            (filterDemarche['en_cours'] && (statut_web === 'en_cours' || statut_web === 'en_emergence')) ||
+            (filterDemarche['en_emergence'] && (statut_web === 'en_emergence')) ||
+            (filterDemarche['en_cours'] && (statut_web === 'en_cours')) ||
             (filterDemarche['terminee'] && statut_web === 'terminee') ||
             (filterDemarche['non_initie'] && statut_web === 'non_initie');
         if (isStatutMatch) {
@@ -210,7 +212,14 @@ $(document).ready(function () {
     function toggleRightPanel() {
         if (rightPanel.style.width === '0px' || rightPanel.style.width === '') {
             // Ouvrir le panneau droit
-            mapContainer.style.width = "calc(100% - " + rightPanelWidth + ")";
+            // Réduction de la taille de la carte
+            if (leftPanel.style.width === '0px' || leftPanel.style.width === ''){
+                // Si Panneau gauche fermé
+                mapContainer.style.width = "calc(100% - " + rightPanelWidth + ")";
+            } else {
+                // Si Panneau gauche ouvert
+                mapContainer.style.width = "calc(100% - " + rightPanelWidth + " - " + leftPanelWidth + ")";
+            }
             rightPanel.style.width = rightPanelWidth;
             // Occulter les deux boutons
             openButtons.forEach(button => {
@@ -219,7 +228,13 @@ $(document).ready(function () {
         } else {
             // Fermer le panneau
             rightPanel.style.width = '0';
-            mapContainer.style.width = "100%";
+            if (leftPanel.style.width === '0px' || leftPanel.style.width === ''){
+                // Si Panneau gauche fermé
+                mapContainer.style.width = "100%";
+            } else {
+                // Si Panneau gauche ouvert
+                mapContainer.style.width = "calc(100% - " + leftPanelWidth + ")";
+            }
             // Afficher les deux boutons
             openButtons.forEach(button => {
                 button.style.display = 'block';
@@ -234,12 +249,12 @@ $(document).ready(function () {
    
     // Paramétrage des deux boutons latéraux de droite
     document.getElementById('bt_demarches').addEventListener("click", () => {
-        closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
+        // closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         toggleRightPanel();
         afficherOnglet('onglet_demarches','panel-right');
     });
     document.getElementById('bt_captages').addEventListener("click", () => {
-        closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
+        // closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         toggleRightPanel();
         afficherOnglet('onglet_captages','panel-right');
     });
@@ -275,11 +290,32 @@ $(document).ready(function () {
             return `<a href="${string}"  target="_blank" class="captage_link"> ${extractDomainFromUrl(string)}</a>`;
         } catch (err) {
             // console.log(err);
-            return 'N/A';
+            return 'Aucun site renseigné';
         }
     }
 
-   
+    // Ajuste la position de l'infobulle
+    function adjustPositionInfoBulle() {
+    // Initialisation du tooltip pour l'élément avec la classe .info-icon
+    $('.info-icon').tooltip({
+        // Paramètres du tooltip
+        position: {
+          my: 'right bottom',  // Position du tooltip par rapport à l'élément
+          at: 'right top'   // Décalage du tooltip
+        },
+        show: {
+          effect: 'fade',        // Effet de transition lors de l'affichage
+          duration: 200          // Durée de l'effet d'affichage en millisecondes
+        },
+        hide: {
+          effect: 'fade',        // Effet de transition lors de la fermeture
+          duration: 200          // Durée de l'effet de fermeture en millisecondes
+        }
+      });
+    }
+
+    adjustPositionInfoBulle();
+
     /// Panneau latéral de gauche
 
     // Ouvre / ferme le panneau gauche
@@ -287,13 +323,25 @@ $(document).ready(function () {
         if (leftPanel.style.width === '0px' || leftPanel.style.width === '') {
             // Ouvrir le panneau gauche
             leftPanel.style.width = leftPanelWidth;
-            mapContainer.style.width = "calc(100% - " + leftPanelWidth + ")";
+            if (rightPanel.style.width === '0px' || rightPanel.style.width === '') {
+                // Panneau droit fermé
+                mapContainer.style.width = "calc(100% - " + leftPanelWidth + ")";
+            } else {
+                // Panneau droit ouvert
+                mapContainer.style.width = "calc(100% - " + leftPanelWidth + " - " + rightPanelWidth + ")";
+            }
             mapContainer.style.marginLeft = leftPanelWidth;
         } else {
             // Fermer le panneau gauche
             leftPanel.style.width = '0';
             mapContainer.style.marginLeft = '0';
-            mapContainer.style.width = "100%";
+            if (rightPanel.style.width === '0px' || rightPanel.style.width === '') {
+                // Panneau droit fermé
+                mapContainer.style.width = "100%";
+            } else {
+                // Panneau droit ouvert
+                mapContainer.style.width = "calc(100% - " + rightPanelWidth + ")";
+            }
         }
     }
 
@@ -304,22 +352,22 @@ $(document).ready(function () {
         const imgFiltre = document.getElementById('bt_onglet_filtre_img');
         if (activeOnglet.id === 'bt_onglet_recherche'){
             imgRecherche.src = 'assets/images/loupe.png';
-            imgFiltre.src = 'assets/images/oeil_grand_blanc.png'
+            imgFiltre.src = 'assets/images/legende_blanc.png'
         } else {
             imgRecherche.src = 'assets/images/loupe_blanc.png';
-            imgFiltre.src = 'assets/images/oeil_grand.png' 
+            imgFiltre.src = 'assets/images/legende.png' 
         }
     }
 
     // Paramétrage des boutons latéraux de gauche
     document.getElementById('bt_recherche').addEventListener("click", () => {
-        closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
+        // closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
         toggleLeftPanel();
         afficherOnglet('onglet_recherche','panel-left');
         toogleImageLeftPanel();
     });
     document.getElementById('bt_legende').addEventListener("click", () => {
-        closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
+        // closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
         toggleLeftPanel();
         afficherOnglet('onglet_filtre','panel-left');
         toogleImageLeftPanel();
@@ -454,9 +502,18 @@ $(document).ready(function () {
         map.fitBounds(layer.getBounds(),{maxZoom : 12});
     };
 
+
+    // Au survol d'une démarche
+    function handleDemarcheMouseOver(layer){
+        highlightFeature(layer);
+        if(filterDemarche['membre_reseau_AG'] || filterDemarche['membre_reseau_RMC']){
+            resetHighlightSelectedMembre(); // désélectionner les membres
+            selectedMembreFromIdDemarche(layer.feature.properties.id_demarche_web); // on sélectionne les membres associés
+        }
+    }
+
     // Action lors du survol avec la souris d'une entité polygonale
-	function highlightFeature(e) {
-		var layer = e.target;
+	function highlightFeature(layer) {
         layer.setStyle({
     		weight: 5,
     		color: '#FD0000',
@@ -466,12 +523,18 @@ $(document).ready(function () {
 	}
 
     // Fin de l'action du survol avec la souris
-	function resetHighlight(e) {
-        var layer = e.target ;
+    function handleDemarcheMouseOut(layer){
+        resetHighlight(layer);
+        if(filterDemarche['membre_reseau_AG'] || filterDemarche['membre_reseau_RMC']){
+            resetHighlightSelectedMembre(); // désélectionner les membres
+        }
+    }
+
+	function resetHighlight(layer) {
         var idDemarcheWeb = layer.feature.properties.id_demarche_web ;
         if (LselectedIdDemarcheWeb.includes(idDemarcheWeb)) {
             // si la démarche est celle qui est sélectionnée, on applique la mise en forme spécifique de la démarche sélectionnée
-            highlightSelectedFeature(e.target);
+            highlightSelectedFeature(layer);
         } else {
             // sinon on réinitialise le style de la démarche
             demarches.resetStyle(layer);
@@ -567,13 +630,13 @@ $(document).ready(function () {
     }
 
     // Ajoute une partie dans le popup Démarche sur les démarches associées
-    function demarchesAssocieesPopup(str){
+    function demarchesAssocieesPopup(str, nomDemarche){
         var insert = '';
         if (str) {
         // Si str n'est pas nul
             if (str.substring(0,4) === 'DEM_'){
             // Si il y a une / des démarches associées
-                insert += `<span class="popup_demarche_partie"> Démarche(s) associée(s)  </span>`;
+                insert += `<span class="popup_demarche_partie"> Démarche(s) associée(s) <span class="info-icon tooltip-white" title="Projet(s) agricole(s) ou de territoire qui s'articule(nt) avec la démarche ${nomDemarche}"><sup>i</sup></span> </span>`;
                 // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
                 var ids = str.split(",");
                 // Parcourir chaque ID dans le tableau avec une boucle for
@@ -609,7 +672,7 @@ $(document).ready(function () {
             <span class="popup_info"> ${feature.properties.animateur} </span>
             <span class="popup_info"> ${feature.properties.mail} </span>
             <span class="popup_info"> ${feature.properties.telephone} </span>
-            ${demarchesAssocieesPopup(feature.properties.id_demarche_web_associe)}
+            ${demarchesAssocieesPopup(feature.properties.id_demarche_web_associe, feature.properties.nom)}
             <div class="more_info" id="more_info">
                 <div class="more_info_button" id="more_info_button">Plus d'informations</div>
                 <div class="more_info_content">
@@ -618,10 +681,10 @@ $(document).ready(function () {
                     <span class="popup_demarche_titre_champs"> Nombre de communes intersectées par le périmètre </span>
                     <span class="popup_info"> ${feature.properties.nb_communes_intersectees} </span>
                     <span class="popup_demarche_titre_champs"> Surface du périmètre d'action (ha) </span>
-                    <span class="popup_info"> ${feature.properties.surface_zone_action} </span>
-                    <span class="popup_demarche_titre_champs"> Année de début de la démarche </span>
+                    <span class="popup_info"> ${feature.properties.surface_zone_action} ${(feature.properties.unite_surface === null) ? '' :  feature.properties.unite_surface}</span>
+                    <span class="popup_demarche_titre_champs"> Année de démarrage de l'animation </span>
                     <span class="popup_info"> ${feature.properties.annee_debut} </span>
-                    <span class="popup_demarche_titre_champs"> Nombre de renouvellement </span>
+                    <span class="popup_demarche_titre_champs"> Nombre de renouvellement <span class="info-icon tooltip-grey" title="Nombre de renouvellements du plan d'actions"><sup>i</sup></span> </span>
                     <span class="popup_info"> ${feature.properties.nb_renouvellement} </span>
                     <span class="popup_demarche_titre_champs"> Période d'évaluation </span>
                     <span class="popup_info"> ${feature.properties.periode_evaluation} </span>
@@ -632,7 +695,7 @@ $(document).ready(function () {
             <div class="more_info" id="more_info2">
                 <div class="more_info_button" id="more_info_button2">Aller plus loin</div>
                 <div class="more_info_content">
-                    <span class="popup_demarche_titre_champs2"> Rendez-vous sur  </span>
+                    <span class="popup_demarche_titre_champs2"> Rendez-vous sur le site du porteur de la démarche : </span>
                     <span class="popup_info2"> ${isValidUrl(feature.properties.lien)} </span>
                 </div>
             </div>
@@ -640,6 +703,8 @@ $(document).ready(function () {
         // Paramétrage du popup (sections rabatues)
         moreInfoAction('more_info_button','more_info');
         moreInfoAction('more_info_button2','more_info2');
+        // Paramétrage infobulle
+        adjustPositionInfoBulle();
         // Paramétrage bouton démarche associée
         demarchesAssocieesPopupClick(feature.properties.id_demarche_web_associe, 'ASSOC_');
     }
@@ -680,7 +745,7 @@ $(document).ready(function () {
 
     // Afficher les infos de la démarche lors du clic
     function showDemarcheInfo(feature) {
-        closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
+        // closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         openPanel(); // Ouvre le panneau latéral si nécessaire
         afficherOnglet('onglet_demarches','panel-right'); // ouvrir l'onglet Dméraches du panneau
         fillDemarcheInfo(feature);
@@ -700,8 +765,12 @@ $(document).ready(function () {
     // Appliqué à chaque démarche
 	function onEachFeature_demarches(feature, layer) {
         layer.on({
-            mouseover: highlightFeature,
-            mouseout: resetHighlight,
+            mouseover: function (e) {
+                handleDemarcheMouseOver(e.target); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
+            },
+            mouseout: function (e) {
+                handleDemarcheMouseOut(e.target); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
+            },
             click: function (e) {
                 handleDemarcheClick(e.target); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
             }
@@ -770,7 +839,7 @@ $(document).ready(function () {
     const zp = L.geoJSON(null,{
         filter: createFilter('zp'),
         style : {
-            color:'rgb(144,187,70)',
+            color:'rgb(255,134,4)',
             weight:2,
             fillOpacity: 0,
         },
@@ -916,7 +985,7 @@ $(document).ready(function () {
                         <span class="captage_champ_info"> ${properties.reseau_complementaire} </span>
                         <span class="captage_more_info_champ"> Date de début de suivi </span>
                         <span class="captage_champ_info"> ${properties.date_debut_suivi} </span>
-                        <span class="captage_more_info_champ"> Arrêté de dérogation aux limites de qualité de l'eau du robinet </span>
+                        <span class="captage_more_info_champ"> Arrêté ZSCE </span>
                         <span class="captage_champ_info"> ${properties.arretes_zsce} </span>
                         <span class="captage_more_info_champ" style="color:#e17a0c;"> Rendez-vous sur  </span>
                         <span class="captage_champ_info"> ${isValidUrl(properties.lien)} </span>
@@ -992,9 +1061,9 @@ $(document).ready(function () {
     function showPopupCaptage(feature){
         var idDemarcheWeb = feature.properties.id_demarche_web;
         var idCaptageWeb = feature.properties.id_captage_web;
-        closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
+        // closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         openPanel(); // Ouvre le panneau latéral si nécessaire
-        afficherOnglet('onglet_captages','panel-right'); // ouvrir l'onglet Dméraches du panneau
+        afficherOnglet('onglet_captages','panel-right'); // ouvrir l'onglet Démarches du panneau
         reinitializeCaptage(); // Réinitaliser le contenu du fieldset captage
         if (idDemarcheWeb === 'non') {
             // pas de démarche associée, on affiche les infos du captage
@@ -1134,9 +1203,29 @@ $(document).ready(function () {
         return nomDemarche;
     }
 
+    // Récupère la surface et son unité à partir de Ldata
+    function getSurfaceDemarcheFromLdata(id){
+        const demarches_features = Ldata.demarches.features;
+        let surfaceDemarche = null;
+        let uniteSurfaceDemarche = null;
+        demarches_features.forEach(function(feature){
+            if (feature.properties.id_demarche_web === id){
+                if (feature.properties.statut_web === 'en_cours' && !isNaN(feature.properties.surface_zone_action)) {
+                    surfaceDemarche = feature.properties.surface_zone_action;
+                    uniteSurfaceDemarche = feature.properties.unite_surface;
+                } else {
+                    surfaceDemarche = 0 ;
+                };
+            }
+        });
+        // console.log(`${surfaceDemarche} ${uniteSurfaceDemarche}`);
+        return {'surface' : surfaceDemarche, 'unite' : uniteSurfaceDemarche};
+    }
+
     // Ajoute une partie dans le popup Démarche sur les démarches associées
     function demarchesAssocieesPopupMembre(str){
         let insert = `<span class="popup_membre_demarche"> Démarche(s) associée(s) : </span>`;
+        let surfaceTotale = 0 ; // Surface totale animée
         // Si il y a une / des démarches associées
         if (str.substring(0,4) === 'DEM_'){
             // Diviser la chaîne en un tableau en utilisant la virgule comme séparateur
@@ -1153,11 +1242,34 @@ $(document).ready(function () {
                         <span class="demarche_associee" id="ASSOC2_${id}"> ▹ ${nomDemarcheAssociee} </span>
                     `;
                 }
+                // Calculer la surface
+                let values = getSurfaceDemarcheFromLdata(id);
+                let surfaceDemarche = values.surface ;
+                let uniteSurfaceDemarche = values.unite ;
+                if (uniteSurfaceDemarche == 'km²') {
+                    surfaceTotale += Number(surfaceDemarche)*100 // Convertit en ha
+                } else {
+                    surfaceTotale += Number(surfaceDemarche) // Déjà en ha
+                }
             }
         } else {
             insert += `<span class="popup_membre_demarches_horsOC"> ▹ ${str} </span>`;
         }
-        return insert;
+        /// Mise en forme de la surface
+        let surfaceAnimee;
+        if (surfaceTotale === 0) {
+            surfaceAnimee = `Pas d'informations`;
+        }
+        else if (surfaceTotale < 1000)  {
+            // Conserve en ha
+            surfaceAnimee = `${surfaceTotale} ha`;
+        } else {
+            // Convertit en km²
+            surfaceAnimee = `${surfaceTotale / 100} km²`;
+        }
+        // console.log(surfaceAnimee);
+        const insertSurface = `<span class="popup_membre_contact bottom_border"> Surface totale animée : <b> ${surfaceAnimee} </b></span>` ;
+        return insertSurface + insert;
     }
 
     // Désélectionner tous à la fermeture du popup
@@ -1172,12 +1284,9 @@ $(document).ready(function () {
             path = 'assets/images/bonhomme_o.png';
         } else if (type_membre === 'syndicat') {
             path = 'assets/images/bonhomme_b.png';
-        } else if (type_membre === 'conseil') {
+        } else {
             // conseil
             path = 'assets/images/bonhomme_v.png';
-        } else {
-            // cooperative
-            path = 'assets/images/bonhomme_vc.png';
         }
         return path ;
     }
@@ -1270,8 +1379,11 @@ $(document).ready(function () {
                 const element = e.target;
                 const idDemarchesWebAssociees = feature.properties.id_demarche_web_associees;
                 var popupContent = `
-                <span class="popup_membre_nom"> ${element.feature.properties.nom_membre} </span>
-                ${demarchesAssocieesPopupMembre(idDemarchesWebAssociees)}
+                    <span class="popup_membre_nom"> ${element.feature.properties.nom_membre} </span>
+                    <span class="popup_membre_struture bottom_border"> (${element.feature.properties.nom_structure}) </span>
+                    <span class="popup_membre_contact"> ${element.feature.properties.mail} </span>
+                    <span class="popup_membre_contact bottom_border"> ${element.feature.properties.telephone} </span>
+                    ${demarchesAssocieesPopupMembre(idDemarchesWebAssociees)}
                 `;
                 // Associer le popup à la couche et l'ouvrir immédiatement
                 element.bindPopup(popupContent, { maxHeight: 250 }).openPopup();
@@ -1449,17 +1561,12 @@ $(document).ready(function () {
     function generateButton(id,statut) {
         // Récupérez la case à cocher et l'élément correspondant à l'image
         var checkbox = document.getElementById(`${id}`);
-        var customCheckbox = checkbox.nextElementSibling; // Récupère l'élément juste après
         // Au changement d'état        
         checkbox.addEventListener('change', function() {
             // console.log(checkbox.checked);
             if (checkbox.checked) {
-                // Oeil ouvert = affichage / Case cochée = occultation non membre
-                customCheckbox.classList.remove('checked'); // Changer style vers oeil ouvert
                 filterDemarche[statut] = (statut !== 'membre_reseau_AG' && statut !== 'membre_reseau_RMC')? false : true; // Désactivation du filtre animation ou activation du filtre membre
             } else {
-                // Oeil fermé = occultation / Case cochée
-                customCheckbox.classList.add('checked'); // Changer style vers oeil fermé
                 filterDemarche[statut] = (statut !== 'membre_reseau_AG' && statut !== 'membre_reseau_RMC')? true : false; // Activation du filtre
             }
             updateFilter();
@@ -1469,6 +1576,7 @@ $(document).ready(function () {
         });
     }
 
+    generateButton('filtre_en_emergence', 'en_emergence');
     generateButton('filtre_en_cours', 'en_cours');
     generateButton('filtre_terminee', 'terminee');
     generateButton('filtre_non_initie', 'non_initie');

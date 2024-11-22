@@ -18,6 +18,8 @@
 
     <!-- JQuery -->
 	<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script> <!-- ToolTip -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> <!-- ToolTip -->
 
     <!-- Inverser les polygones - Leaflet.snogylop (https://github.com/ebrelsford/Leaflet.snogylop) -->
     <script src="assets/js/leaflet.snogylop.js"></script>
@@ -34,7 +36,7 @@
 
     <!-- Icone de chargement  -->
     <div id="loader">
-        <img id="logo" src="assets/images/logo_captage.png" alt="Logo Captages d'EAUccitanie">
+        <img id="logo" src="assets/images/logo_captage.png" alt="Logo Captages d'Eauccitanie">
     </div>
 
     
@@ -104,7 +106,7 @@
 
     <!-- Panneau latéral Gauche (Recherche / Légende et Filtres) -->
     <button id="bt_recherche" class="openbtn openbtn-left"><img src="assets/images/loupe.png" alt="Rechercher" class="logo_lateral"></button>
-    <button id="bt_legende" class="openbtn openbtn-left"><img src="assets/images/oeil_grand.png" alt="Légende" class="logo_lateral"></button>
+    <button id="bt_legende" class="openbtn openbtn-left"><img src="assets/images/legende.png" alt="Légende" class="logo_lateral"></button>
     <div id="panel-left">
         <!-- Bouton Fermer le panneau  -->
         <span class="btContainer-left"><button class="bt_fermer" id="bt_fermer-left"> < </button></span>
@@ -116,8 +118,8 @@
                     <span class="titre_onglet"> Rechercher </span>
                 </button>
                 <button type="button" id="bt_onglet_filtre" data-onglet="onglet_filtre" class="bt_onglet">
-                    <img src="assets/images/oeil_grand.png" id="bt_onglet_filtre_img" class="image_onglet" alt="Logo filtre">
-                    <span class="titre_onglet"> Filtrer </span>
+                    <img src="assets/images/legende.png" id="bt_onglet_filtre_img" class="image_onglet" alt="Logo légende">
+                    <span class="titre_onglet"> Légende </span>
                 </button>
             </div>
             <!-- Contenu -->
@@ -130,113 +132,125 @@
                     <span id="clearSearch" class="clear-button">&times;</span>        
                     <div id="results"></div>
                 </div>
+                <div class="search-container search-container-legend">
+                    Rechercher une <span style="font-weight: bold;">démarche</span> par :
+                    <ul>
+                        <li> Nom de la démarche </li>
+                        <li> Nom de la structure d'animation </li>
+                        <li> Nom de l'animatrice(teur) </li>
+                        <li> Département </li>
+                    </ul>
+                    Rechercher un <b>captage</b> par :
+                    <ul>
+                        <li> Nom du captage </li>
+                        <li> Nom de la démarche associée </li>
+                        <li> Maître d'ouvrage </li>
+                        <li> Commune </li>
+                    </ul>
+                </div>
             </fieldset>
             <!-- Onglet de légende et filtre -->
             <fieldset id="onglet_filtre">
                 <div id="legend" class="container-left">
                     <span id="legend-titre" class="titre-container-left"> Légende </span>
-                    <div class="legend-element" title="Captages publics dégradés par les pollutions diffuses, notamment pesticides et nitrates">
+                    <div class="legend-element">
                         <img src="assets/images/goutte_j.png" alt="captage sensible" class="legend-goutte">
-                        Captage sensible
-                    </div>
-                    <div class="legend-element" title="Captages publics dégradés par les pollutions diffuses, notamment pesticides et nitrates">
-                        <img src="assets/images/goutte_b.png" alt="captage prioritaire" class="legend-goutte">
-                        Captage prioritaire
-                    </div>
-                    <div class="legend-element" title="Zone de Protection de l'Aire d'Alimentation du Captage">
-                        <span style="background-color: white; border: 2px solid rgb(144,187,70) ;"></span>
-                        ZPAAC
-                    </div>
-                    <div class="legend-element legend-space" title="Aire d'Alimentation du Captage">
-                        <span style="background-color: rgb(87,107,53,0.5); border: 3px solid rgb(87,107,53);"></span>
-                        AAC (périmètre de la démarche)
-                    </div>
-                    <div class="legend-element legend-arbitraire">
-                        <span style="background-color: rgb(87,107,53,0.5); border: 3px dashed rgb(87,107,53);"></span>
-                        <i> Périmètre arbitraire </i>
+                        Captage sensible au sens du SDAGE AG
                     </div>
                     <div class="legend-element">
-                        <span style="background-color: rgb(000,124,142,0.5); border: 3px solid rgb(000,124,142)"></span>
-                        Démarches territoriales (hors AAC)
+                        <img src="assets/images/goutte_b.png" alt="captage prioritaire" class="legend-goutte">
+                        Captage prioritaire au sens des SDAGE AG et RMC
+                    </div>
+                    <div class="legend-element">
+                        <span class="figure" style="background-color: white; border: 2px solid rgb(255,134,4) ;"></span>
+                        ZPAAC <span class="info-icon tooltip-black" title="Zone de Protection de l'Aire d'Alimentation de Captage"><sup>i</sup></span>
+                    </div>
+                    <div class="legend-element legend-space" title="Aire d'Alimentation du Captage">
+                        <span class="figure" style="background-color: rgb(87,107,53,0.5); border: 3px solid rgb(87,107,53);"></span>
+                        <span>Démarche captage prioritaire à l'échelle d'une AAC<span class="info-icon tooltip-black" title="AAC : Aire d'Alimentation de Captage"><sup>i</sup></span>                    </div>
+                    <div class="legend-element legend-arbitraire">
+                        <span class="figure" style="background-color: rgb(87,107,53,0.5); border: 3px dashed rgb(87,107,53);"></span>
+                        <i> Périmètre en cours de délimitation </i>
+                    </div>
+                    <div class="legend-element">
+                        <span class="figure" style="background-color: rgb(000,124,142,0.5); border: 3px solid rgb(000,124,142)"></span>
+                        Démarche territoriale (hors AAC)
                     </div>
                     <div class="legend-element legend-arbitraire">
-                        <span style="background-color: rgb(000,124,142,0.5); border: 3px dashed rgb(000,124,142)"></span>
-                        <i> Périmètre arbitraire </i>
+                        <span class="figure" style="background-color: rgb(000,124,142,0.5); border: 3px dashed rgb(000,124,142)"></span>
+                        <i> Périmètre en cours de délimitation </i>
                     </div>
                     <div class="legend-element legend-space">
-                        <span style="background-color: white; border: 2px solid rgb(113,151,141);"></span>
+                        <span class="figure" style="background-color: white; border: 2px solid rgb(113,151,141);"></span>
                         Département
                     </div>
                     <div class="legend-element">
-                        <span style="background-color: white; border: 2px solid rgb(108,188,165);"></span>
+                        <span class="figure" style="background-color: white; border: 2px solid rgb(108,188,165);"></span>
                         Bassin versant
                     </div>
                 </div>
 
                 <div id="filtre" class="container-left">
-                    <span id="filtre-titre" class="titre-container-left"> Animations territoriales </span>
+                    <span id="filtre-titre" class="titre-container-left"> Démarches territoriales </span>
                     <ul>
                         <li class="layer-element">
-                            <label title="Afficher / Masquer les animations en cours ou en émergence" for="filtre_en_cours">
-                            <input type="checkbox" id="filtre_en_cours" name="item" class="item" value="En émergence / en cours" checked>
-                            <span class="custom-checkbox"></span>
-                            <span> En émergence / en cours </span>
+                            <label title="Afficher / Masquer les animations en émergence" for="filtre_en_emergence">
+                                <input type="checkbox" id="filtre_en_emergence" name="item" class="item" value="En émergence" checked>
+                                <span> En émergence</span>
+                            </label>
+                        </li>
+                        <li class="layer-element">
+                            <label title="Afficher / Masquer les animations en cours" for="filtre_en_cours">
+                                <input type="checkbox" id="filtre_en_cours" name="item" class="item" value="En cours" checked>
+                                <span> En cours </span>
                             </label>
                         </li>
                         <li class="layer-element">
                             <label title="Afficher / Masquer les animations terminées" for="filtre_terminee">
-                            <input type="checkbox" id="filtre_terminee" name="item" class="item" value="Terminées" checked>
-                            <span class="custom-checkbox"></span>
-                            <span>Terminées</span>
+                                <input type="checkbox" id="filtre_terminee" name="item" class="item" value="Terminée" checked>
+                                <span>Terminée</span>
                             </label>
                         </li>
                         <li class="layer-element">
                             <label title="Afficher / Masquer les animations non initiées" for="filtre_non_initie">
-                            <input type="checkbox" id="filtre_non_initie" name="item" class="item" value="Non initiées" checked>
-                            <span class="custom-checkbox"></span>
-                            <span>Non initiées</span>
+                                <input type="checkbox" id="filtre_non_initie" name="item" class="item" value="Non initiée" checked>
+                                <span>Non initiée</span>
                             </label>
                         </li>
                     </ul>
                 </div>
 
                 <div class="container-left">
-                    <span class="titre-container-left"> Membres du réseau </span>
+                    <span class="titre-container-left"> Membres du réseau Captages d'Eauccitanie</span>
+                    <ul>
+                        <li class="layer-element">
+                            <label title="Afficher les membres du secteur AG" for="filtre_reseau_AG">
+                                <input type="checkbox" id="filtre_reseau_AG" name="item" class="item" value="Membre du réseau (Secteur AG)">
+                                <span class="item_evidence" > Secteur AG - Occitanie Ouest <span id="ct_ag"></span><span class="info-icon tooltip-blue" title="AG : Adour-Garonne"><sup>i</sup></span></span>
+                            </label>
+                        </li>
+                        <li class="layer-element">
+                            <label title="Afficher les membres du secteur RMC" for="filtre_reseau_RMC">
+                                <input type="checkbox" id="filtre_reseau_RMC" name="item" class="item" value="Membre du réseau (Secteur RMC)">
+                                <span class="item_evidence"> Secteur RMC - Occitanie Est <span id="ct_rmc"></span><span class="info-icon tooltip-blue" title="RMC : Rhône Méditerranée Corse"><sup>i</sup></span></span>
+                            </label>
+                        </li>
+                    </ul>
                     <div id="legend-membre" style="display: none;">
-                        <div class="legend-element legend-membre-titre">Membre du réseau </div>
+                        <div class="legend-element legend-membre-titre">Type de structure</div>
                         <div class="legend-element">
                             <img src="assets/images/bonhomme_o.png" alt="Collectivité, syndicat d'eau potable" class="legend-bonhomme">
                             Collectivité, syndicat d'eau potable
                         </div>
                         <div class="legend-element">
-                            <img src="assets/images/bonhomme_v.png" alt="captage prioritaire" class="legend-bonhomme">
-                            Organisme de conseil agricole
-                        </div>
-                        <div class="legend-element">
-                            <img src="assets/images/bonhomme_vc.png" alt="Organisme économique" class="legend-bonhomme">
-                            Organisme économique
-                        </div>
-                        <div class="legend-element">
                             <img src="assets/images/bonhomme_b.png" alt="Syndicat de bassin, EPTB" class="legend-bonhomme">
                             Syndicat de bassin, EPTB
                         </div>
+                        <div class="legend-element">
+                            <img src="assets/images/bonhomme_v.png" alt="captage prioritaire" class="legend-bonhomme">
+                            Organisme de conseil agricole
+                        </div>
                     </div>
-                    <span class="custom-text">Afficher les membres et les démarches qu'ils animent :</span>
-                    <ul>
-                        <li class="layer-element">
-                            <label title="Afficher les membres du réseau du Bassin AG" for="filtre_reseau_AG">
-                            <input type="checkbox" id="filtre_reseau_AG" name="item" value="Membre du réseau (Bassin Ouest)">
-                            <span class="item_evidence" > Secteur "Ouest" <span id="ct_ag"></span></span>
-                            </label>
-                        </li>
-                        <li class="layer-element">
-                            <label title="Afficher les membres du réseau du Bassin RMC" for="filtre_reseau_RMC">
-                            <input type="checkbox" id="filtre_reseau_RMC" name="item" value="Membre du réseau (Secteur Est)">
-                            <span class="item_evidence"> Secteur "Est" <span id="ct_rmc"></span></span>
-                            </label>
-                        </li>
-                    </ul>
-                    <span class="custom-text"><i>Un membre anime une ou plusieurs démarches.</i></span>
                 </div>
              </fieldset>
         </div>
