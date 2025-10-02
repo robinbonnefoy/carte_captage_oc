@@ -2,7 +2,7 @@ $(document).ready(function () {
     // ------------------------------------------------------------------------------------------------------------
     ///// Constantes et variables globales
 
-    const dateMAJ = 'Novembre 2024';
+    const dateMAJ = 'Février 2025';
 
     const mapContainer = document.getElementById("map"); // conteneur de la carte Leaflet
 
@@ -22,8 +22,9 @@ $(document).ready(function () {
     const captageSearchFields = ['nom', 'nom_demarche', 'maitre_ouvrage', 'nom_com']; // Champs de recherche pour la couche Captage
 
     var Ldata = {}; // Données de l'ensemble des structures
-    var filterOn = false; // Etat général du filtre des démarches (activé ou non)
-    var filterDemarche = {'en_emergence':false, 'en_cours':false, 'terminee':false, 'non_initie':false, 'membre_reseau_AG': false, 'membre_reseau_RMC': false}; // Filtre des démarches
+    var filterOn = true; // Etat général du filtre des démarches (activé ou non)
+    var filterDemarche = {'en_emergence':false, 'en_cours':false, 'terminee':true, 'non_initie':true, 'membre_reseau_AG': false, 'membre_reseau_RMC': false}; // Filtre des démarches
+    var filterCaptage = {'non_classe':true}; // Filtre des captages
 
     let nbCouchesChargees = 0 ; // Nb couches chargées
 
@@ -117,6 +118,16 @@ $(document).ready(function () {
 
     // Filtre les entités des couches 'demarches', 'zp' et 'captage'
     function customFilter(feature, couche) {
+        /// Filtre captages
+        // Filtre captage non classé
+        if (couche === 'captages' && feature.properties.type_captage === 'Non classé') {
+            const notDisplayNonClasse = filterCaptage['non_classe'];
+            if (notDisplayNonClasse) {
+                // si true, on n'affiche pas les captages non classés
+                return false;
+            }
+        }
+        /// Filtre démarches
         if (!filterOn) {
             // Si le filtre n'est pas activé, on retourne toutes les entités
             return true;
@@ -155,7 +166,7 @@ $(document).ready(function () {
             // si true ==> entitée qui doit être affichée
             return false;
         }
-        return true
+        return true;
     }
 
     // Filtre les entités de la couche 'membres'
@@ -827,8 +838,8 @@ $(document).ready(function () {
         attribution: `<a href="https://www.fredonoccitanie.com/">FREDON Occitanie</a>, Mise à jour en ${dateMAJ}`
     });
     $.getJSON('data/demarches.geojson', function(data){
-        demarches.addData(data).addTo(map);
         Ldata.demarches = data ;
+        // demarches.addData(data).addTo(map); // Ajout des données à la carte à la fin au chargement
         nbCouchesChargees++;
     });
 
@@ -846,8 +857,8 @@ $(document).ready(function () {
         interactive: false // couche non cliquable
     });
     $.getJSON('data/zpaac.geojson', function(data){
-        zp.addData(data).addTo(map);
         Ldata.zp = data ;
+        // zp.addData(data).addTo(map); // Ajout des données à la carte à la fin au chargement
         nbCouchesChargees++;
     });
 
@@ -856,7 +867,15 @@ $(document).ready(function () {
 
     // Récupérer le chemin de l'icone
     function getIconPath (type_captage) {
-        return (type_captage === 'Sensible') ? 'assets/images/goutte_j.png' : 'assets/images/goutte_b.png';
+        let imagePath = '';
+        if (type_captage === 'Sensible') {
+            imagePath = 'assets/images/goutte_j.png';
+        } else if (type_captage === 'Prioritaire') {
+            imagePath = 'assets/images/goutte_b.png';
+        } else {
+            imagePath = 'assets/images/goutte_g.png';
+        }
+        return imagePath;
     }
 
     // Construction du marqueur de la couche des captages (prioritaire ou sensible)
@@ -1138,8 +1157,8 @@ $(document).ready(function () {
     var layerHiddenControl = new LayerHiddenControl({position: 'topleft'});
 
     $.getJSON('data/captages.geojson', function(data){
-        captages.addData(data).addTo(map);
         Ldata.captages = data;
+        // captages.addData(data).addTo(map); // Ajout des données à la carte à la fin au chargement
         updateGeoJSONLayerVisibility();
         nbCouchesChargees++;
     });
@@ -1405,8 +1424,8 @@ $(document).ready(function () {
     });
 
     $.getJSON('data/membres.geojson', function(data){
-        membres.addData(data).addTo(map);
         Ldata.membres = data;
+        // membres.addData(data).addTo(map); // Ajout des données à la carte à la fin au chargement
         updateNbMembres(); // mettre à jour les compteurs nombre de membres
         nbCouchesChargees++;
     });
@@ -1491,10 +1510,11 @@ $(document).ready(function () {
             } else {
                 if (result.ss_type === 'Sensible'){
                     styleResult = 'captageSensibleResult';
-                } else {
+                } else if (result.ss_type === 'Prioritaire'){
                     styleResult = 'captagePrioritaireResult';
-                }
-            }
+                } else {
+                    styleResult = 'captageNonClasseResult';
+                }            }
             listItem.classList.add(styleResult);
             resultsDiv.appendChild(listItem);
         });
@@ -1517,6 +1537,8 @@ $(document).ready(function () {
 
     // --------------------------------------------------------------------------------------------------------------
     ///// FILTRE
+
+    /// Filtre démarches
 
     // Récupère le statut_web et le membre_reseau à partir de l'id_demarche_web
     function getStatutWebById(idDemarcheWeb) {
@@ -1545,7 +1567,7 @@ $(document).ready(function () {
         demarches.clearLayers(); // Effacer toutes les démarches
         demarches.addData(Ldata.demarches); // Ajouter de nouveau les données
 
-        // Miose à jour de la couche zp
+        // Mise à jour de la couche zp
         zp.clearLayers();
         zp.addData(Ldata.zp);
 
@@ -1560,7 +1582,7 @@ $(document).ready(function () {
 
     function generateButton(id,statut) {
         // Récupérez la case à cocher et l'élément correspondant à l'image
-        var checkbox = document.getElementById(`${id}`);
+        const checkbox = document.getElementById(`${id}`);
         // Au changement d'état        
         checkbox.addEventListener('change', function() {
             // console.log(checkbox.checked);
@@ -1582,13 +1604,46 @@ $(document).ready(function () {
     generateButton('filtre_non_initie', 'non_initie');
     generateButton('filtre_reseau_RMC', 'membre_reseau_RMC');
     generateButton('filtre_reseau_AG', 'membre_reseau_AG');
-    
+
+    /// Filtres captages
+
+    function updateFilterCaptages () {
+        // Mise à jour de la couche Captages
+        captages.clearLayers();
+        captages.addData(Ldata.captages);
+    }
+
+    function generateButtonCaptages(id) {
+        // Récupérez la case à cocher et l'élément correspondant à l'image
+        const checkbox = document.getElementById(`${id}`);
+        // Au changement d'état        
+        checkbox.addEventListener('change', function() {
+            // console.log(checkbox.checked);
+            if (checkbox.checked) {
+                filterCaptage['non_classe'] = false; // Désactivation du filtre
+            } else {
+                filterCaptage['non_classe'] = true; // Activation du filtre
+            }
+            updateFilterCaptages();
+        });
+    }
+    generateButtonCaptages('filtre_captage_non_classe');
+
     // --------------------------------------------------------------------------------------------------------------
     ///// CHARGEMENT
+
+    // Ajout des données à la carte
+    function initialAddData () {
+        demarches.addData(Ldata.demarches).addTo(map);
+        zp.addData(Ldata.zp).addTo(map);
+        captages.addData(Ldata.captages).addTo(map);
+        membres.addData(Ldata.membres).addTo(map);
+    }
 
     // Ordonne l'affichage des couches au chargement
     function initialOrderingLayers () {
         return new Promise((resolve) => {
+            initialAddData();
             orderingDisplayLayers();
             resolve();
         });

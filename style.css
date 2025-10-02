@@ -906,6 +906,13 @@ input:focus {
     background-color : #0c4e67;
     color:white;
 }
+.captageNonClasseResult{
+    color : #757575;
+}
+.captageNonClasseResult:hover{
+    background-color : #757575;
+    color:white;
+}
 
 /* --- LEGENDE --- */
 
