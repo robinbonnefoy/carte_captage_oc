@@ -23,8 +23,8 @@ $(document).ready(function () {
 
     var Ldata = {}; // Données de l'ensemble des structures
     var filterOn = true; // Etat général du filtre des démarches (activé ou non)
-    var filterDemarche = {'en_emergence':false, 'en_cours':false, 'terminee':true, 'non_initie':true, 'membre_reseau_AG': false, 'membre_reseau_RMC': false}; // Filtre des démarches
-    var filterCaptage = {'non_classe':true}; // Filtre des captages
+    var filterDemarche = {'en_emergence':false, 'en_cours':false, 'terminee':true, 'non_initie':true, 'membre_reseau_AG': false, 'membre_reseau_RMC': false, 'action_phare' : false}; // Filtre des démarches
+    var filterCaptage = {'non_classe':false}; // Filtre des captages
 
     let nbCouchesChargees = 0 ; // Nb couches chargées
 
@@ -64,22 +64,18 @@ $(document).ready(function () {
             // Cache le loader et affiche la carte une fois le chargement terminé
             document.getElementById('loader').style.display = 'none';
             // Affiche la notice
-            document.getElementById('notice').style.display = 'flex'; 
+            const notice = document.getElementById('notice');
+            notice.style.display = 'flex'; 
             // Cache la notice lors du clic sur la carte
-            document.addEventListener('click', function () {
-                document.getElementById('notice').style.display = 'none';
+            notice.addEventListener('click', function () {
+                notice.style.display = 'none';
+                // Ouvrir la légende
+                toggleLeftPanel();
+                afficherOnglet('onglet_filtre','panel-left');
+                toogleImageLeftPanel();
             });
         }, 2000);               
 	};
-
-   
-    // Ferme le panneau latéral si ouvert
-    function closePanel (panel,widthPanel,fctToggle) {
-        const isOpen = panel.style.width === widthPanel;
-        if(isOpen){
-            fctToggle();
-        }
-    }
 
     // Navigue entre les deux onglets du panneau panelId
     function afficherOnglet(ongletId, panelId) {
@@ -120,7 +116,8 @@ $(document).ready(function () {
     function customFilter(feature, couche) {
         /// Filtre captages
         // Filtre captage non classé
-        if (couche === 'captages' && feature.properties.type_captage === 'Non classé') {
+        const liste = ['Sensible', 'Prioritaire'];
+        if (couche === 'captages' && !liste.includes(feature.properties.type_captage)) {
             const notDisplayNonClasse = filterCaptage['non_classe'];
             if (notDisplayNonClasse) {
                 // si true, on n'affiche pas les captages non classés
@@ -136,16 +133,28 @@ $(document).ready(function () {
         let statut_web ;
         let membre_reseau ;
         let bassin ;
+        let is_action_phare;
         if (couche === 'demarches') {
             statut_web = feature.properties.statut_web;
             membre_reseau = feature.properties.membre_reseau;
             bassin = feature.properties.bassin_web;
+            // Action phare
+            const action_phare = feature.properties.titre_action_phare;
+            is_action_phare = action_phare && action_phare !== "non" ;
         } else {
             // Couches 'captages' ou 'zp'
             const jointureInfo = getStatutWebById(feature.properties.id_demarche_web); // Récupère le statut_web depuis la démarche jointe
             statut_web = jointureInfo['statut_web'];
             membre_reseau = jointureInfo['membre_reseau'];
             bassin = jointureInfo['bassin'];
+            // Action phare
+            const action_phare = jointureInfo['titre_action_phare'];
+            is_action_phare = action_phare && action_phare !== "non" ;
+        }
+        // Filtre sur l'action phare
+        if (filterDemarche['action_phare'] && !is_action_phare) {
+            // si true -> fitre sur action phare et n'est pas une action phare --> occulter
+            return false;
         }
         // Filtre sur l'état de l'animation
         const isStatutMatch =
@@ -260,12 +269,10 @@ $(document).ready(function () {
    
     // Paramétrage des deux boutons latéraux de droite
     document.getElementById('bt_demarches').addEventListener("click", () => {
-        // closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         toggleRightPanel();
         afficherOnglet('onglet_demarches','panel-right');
     });
     document.getElementById('bt_captages').addEventListener("click", () => {
-        // closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         toggleRightPanel();
         afficherOnglet('onglet_captages','panel-right');
     });
@@ -372,13 +379,11 @@ $(document).ready(function () {
 
     // Paramétrage des boutons latéraux de gauche
     document.getElementById('bt_recherche').addEventListener("click", () => {
-        // closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
         toggleLeftPanel();
         afficherOnglet('onglet_recherche','panel-left');
         toogleImageLeftPanel();
     });
     document.getElementById('bt_legende').addEventListener("click", () => {
-        // closePanel(rightPanel, rightPanelWidth, toggleRightPanel); // Fermer le panneau de droit si ouvert
         toggleLeftPanel();
         afficherOnglet('onglet_filtre','panel-left');
         toogleImageLeftPanel();
@@ -669,6 +674,22 @@ $(document).ready(function () {
         return insert;
     }
 
+    // Ajoute uen partie Action dans le popup Démarche si y en a une
+    function actionPharePopup (titre, lien) {
+        let insert = ''
+        if (titre && titre != 'non'){
+            // Si il y a une action phare
+            insert += `<span class="action_phare_partie"> Action Phare </span>`;
+            if (lien){
+                insert += `<span class="action_phare"> <a href="${lien}"  target="_blank" class="action_phare_link"> ${titre} </a> </span>`;
+            } else {
+                insert += `<span class="action_phare" title="Article à venir, contacter l'animateur."> ${titre}
+                    <span class="info-icon tooltip-green" title="Article à venir, contacter l'animateur."><sup>i</sup></span></span>`;
+            }
+        }
+        return insert;
+    }
+
     // Remplit les infos de la démarche de la Partie "Démarche territoriale"
     function fillDemarcheInfo(feature){
         fieldset_demarches.innerHTML = `
@@ -684,6 +705,7 @@ $(document).ready(function () {
             <span class="popup_info"> ${feature.properties.mail} </span>
             <span class="popup_info"> ${feature.properties.telephone} </span>
             ${demarchesAssocieesPopup(feature.properties.id_demarche_web_associe, feature.properties.nom)}
+            ${actionPharePopup(feature.properties.titre_action_phare, feature.properties.lien_action_phare)}
             <div class="more_info" id="more_info">
                 <div class="more_info_button" id="more_info_button">Plus d'informations</div>
                 <div class="more_info_content">
@@ -756,7 +778,6 @@ $(document).ready(function () {
 
     // Afficher les infos de la démarche lors du clic
     function showDemarcheInfo(feature) {
-        // closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
         openPanel(); // Ouvre le panneau latéral si nécessaire
         afficherOnglet('onglet_demarches','panel-right'); // ouvrir l'onglet Dméraches du panneau
         fillDemarcheInfo(feature);
@@ -775,6 +796,20 @@ $(document).ready(function () {
     
     // Appliqué à chaque démarche
 	function onEachFeature_demarches(feature, layer) {
+        //  Création du contour extérieur / halo si action phare
+        const action_phare = feature.properties.titre_action_phare;
+        if ( action_phare && action_phare !== "non") {
+            let halo = L.geoJSON(feature, {
+                style: style_action_phare
+            });
+
+            halos_demarches.addLayer(halo);
+
+            halo.eachLayer(function(l){
+                l.bringToBack();
+            });
+        }
+
         layer.on({
             mouseover: function (e) {
                 handleDemarcheMouseOver(e.target); // si on met e fait référence à l'évènement et ne fonctionne pas si on veut mettre une couche sans évènement clic
@@ -790,46 +825,45 @@ $(document).ready(function () {
 
     /// Style
     function style_demarches (feature) {
-        var style;
+        let style;
         // Démarches
         if (feature.properties.type_web === 'autre') {
-            if (feature.properties.perimetre_arbitraire_web == 'oui'){
-                style = {
-                    color:'rgb(000,124,142)',
-                    weight:2,
-                    dashArray: 4, // contour en pointillé
-                    fillColor: 'rgb(000,124,142)',
-                    fillOpacity: 0.5,
-                }
-            } else {
-                style = {
-                    color:'rgb(000,124,142)',
-                    weight:2,
-                    fillColor: 'rgb(000,124,142)',
-                    fillOpacity: 0.5,
-                }
-            }
-        // AAC ou PAT 
+
+            style = {
+                color:'rgb(0,124,142)',
+                weight:2,
+                fillColor:'rgb(0,124,142)',
+                fillOpacity:0.5
+            };
+
         } else {
-            if (feature.properties.perimetre_arbitraire_web == 'oui'){
-                style = {
-                    color:'rgb(87,107,53)',
-                    weight:2,
-                    dashArray: 4, // contour en pointillé
-                    fillColor: 'rgb(87,107,53)',
-                    fillOpacity: 0.5,
-                }
-            } else {
-                style = {
-                    color:'rgb(87,107,53)',
-                    weight:2,
-                    fillColor: 'rgb(87,107,53)',
-                    fillOpacity: 0.5,
-                }
-            }
+            // AAC ou PAT 
+            style = {
+                color:'rgb(87,107,53)',
+                weight:2,
+                fillColor:'rgb(87,107,53)',
+                fillOpacity:0.5
+            };
         }
+        
+        // Périmètre arbitraire
+        if (feature.properties.perimetre_arbitraire_web == 'oui') {
+            style.dashArray = 4;
+        }
+
         return style;
     }
+
+    // Halo pour action phare
+    function style_action_phare(feature){
+        return {
+            color: '#9BE27A',   // vert clair
+            weight: 8,          // plus large
+            fillOpacity: 0,
+            interactive: false
+        };
+    }
+    const halos_demarches = L.layerGroup().addTo(map); // couche des halos
 
     const demarches = L.geoJSON(null,{
         filter: createFilter('demarches'),
@@ -1078,9 +1112,8 @@ $(document).ready(function () {
 
     // Lors du clic sur un captage
     function showPopupCaptage(feature){
-        var idDemarcheWeb = feature.properties.id_demarche_web;
-        var idCaptageWeb = feature.properties.id_captage_web;
-        // closePanel(leftPanel, leftPanelWidth, toggleLeftPanel); // Fermer le panneau de gauche si ouvert
+        const idDemarcheWeb = feature.properties.id_demarche_web;
+        const idCaptageWeb = feature.properties.id_captage_web;
         openPanel(); // Ouvre le panneau latéral si nécessaire
         afficherOnglet('onglet_captages','panel-right'); // ouvrir l'onglet Démarches du panneau
         reinitializeCaptage(); // Réinitaliser le contenu du fieldset captage
@@ -1100,7 +1133,7 @@ $(document).ready(function () {
     function handleCaptageClick (layer) {
         // clickZoom(layer);
         resetAllHighlightSelected(); // réinitiliser toutes les sélections
-        resetHighlightSelectedMembre (); // déselectionne le membre
+        resetHighlightSelectedMembre(); // déselectionne le membre
         showPopupCaptage(layer.feature);
         highlightSelectedMarker(layer); // sélectionne le captage
     }
@@ -1548,9 +1581,9 @@ $(document).ready(function () {
         });
         // Retourner le statut_web si l'élément est trouvé, sinon retourner null
         if (elementTrouve) {
-            return {'statut_web' : elementTrouve.properties.statut_web, 'membre_reseau' : elementTrouve.properties.membre_reseau, 'bassin' : elementTrouve.properties.bassin_web};
+            return {'statut_web' : elementTrouve.properties.statut_web, 'membre_reseau' : elementTrouve.properties.membre_reseau, 'bassin' : elementTrouve.properties.bassin_web, 'titre_action_phare' : elementTrouve.properties.titre_action_phare};
         } else {
-            return {'statut_web' : 'non_initie', 'membre_reseau' : 'non', 'bassin' : 'N/A'}; // Ou une valeur par défaut si l'ID n'est pas trouvé
+            return {'statut_web' : 'non_initie', 'membre_reseau' : 'non', 'bassin' : 'N/A', 'titre_action_phare' : 'non'}; // Ou une valeur par défaut si l'ID n'est pas trouvé
         }
     }
 
@@ -1564,6 +1597,7 @@ $(document).ready(function () {
             filterOn = true ;
         }
         // Mise à jour de la couche Démarches
+        halos_demarches.clearLayers(); // Effacer tous les halos
         demarches.clearLayers(); // Effacer toutes les démarches
         demarches.addData(Ldata.demarches); // Ajouter de nouveau les données
 
@@ -1587,13 +1621,13 @@ $(document).ready(function () {
         checkbox.addEventListener('change', function() {
             // console.log(checkbox.checked);
             if (checkbox.checked) {
-                filterDemarche[statut] = (statut !== 'membre_reseau_AG' && statut !== 'membre_reseau_RMC')? false : true; // Désactivation du filtre animation ou activation du filtre membre
+                filterDemarche[statut] = (statut !== 'membre_reseau_AG' && statut !== 'membre_reseau_RMC' && statut !== 'action_phare')? false : true; // Désactivation du filtre animation ou activation du filtre membre
             } else {
-                filterDemarche[statut] = (statut !== 'membre_reseau_AG' && statut !== 'membre_reseau_RMC')? true : false; // Activation du filtre
+                filterDemarche[statut] = (statut !== 'membre_reseau_AG' && statut !== 'membre_reseau_RMC' && statut !== 'action_phare')? true : false; // Activation du filtre
             }
             updateFilter();
             // console.log(filterOn);
-            // console.log(filterDemarche);
+            console.log(filterDemarche);
             orderingDisplayLayers();
         });
     }
@@ -1604,6 +1638,7 @@ $(document).ready(function () {
     generateButton('filtre_non_initie', 'non_initie');
     generateButton('filtre_reseau_RMC', 'membre_reseau_RMC');
     generateButton('filtre_reseau_AG', 'membre_reseau_AG');
+    generateButton('filtre_action_phare', 'action_phare');
 
     /// Filtres captages
 

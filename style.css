@@ -346,6 +346,14 @@ padding : 0 3px 0 3px;
     color: #005866;
     border: 1px solid #005866;
 }
+.tooltip-green{
+    color: #70b94b;
+    border: 1px solid #70b94b;
+}
+.tooltip-green:hover {
+    color: #538a38;
+    border: 1px solid #538a38;
+}
 
 /* -- Navigation -- */
 .bt_onglet {
@@ -548,6 +556,36 @@ a.demarche_link:active {
 }
 .demarche_associee:hover {
     color: #ff7300; /* Couleur du texte au survol */
+}
+
+.action_phare_partie {
+    font-family: 'FilsonPro', sans-serif;
+    display: block;
+    width: 100%;
+    background-color: #70b94b; /* Couleur de fond, vous pouvez la changer selon vos besoins */
+    color: white; /* Couleur du texte */
+    padding: 5px 0; /* Padding en haut et en bas */
+    margin: 10px 0; /* Espacement au-dessus et en dessous du bandeau */
+    text-align: center;
+    /* font-weight: bold; */
+}
+.action_phare {
+    color: #70b94b;
+    display: block;
+    padding : 0 3px 0 3px;
+}
+a.action_phare_link {
+    font-family: 'SourceSansPro', sans-serif;
+    color: #70b94b; /* Couleur du texte */
+    text-decoration: none; /* Supprime le soulignement par défaut */
+    display: inline-block; /* Pour gérer les marges et le padding */
+    transition: background-color 0.3s, color 0.3s; /* Transitions pour le survol */
+}
+a.action_phare_link:hover {
+    color: #589d36; /* Couleur du texte au survol */
+}
+a.action_phare_link:active {
+    color: rgb(75, 131, 48); /* Couleur du texte au clic */
 }
 
 /* Popup Captage */
@@ -934,7 +972,7 @@ input:focus {
 }
 
 .legend-space {
-    margin-top : 15px;
+    margin-top : 5px;
 }
 
 .legend-element .figure {
@@ -1013,4 +1051,5 @@ label {
 
 .item {
     accent-color: #555555; /* Couleur pour la case cochée */
+    cursor: pointer;
 }
